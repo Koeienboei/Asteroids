@@ -1,0 +1,2 @@
+Exception in thread "main" java.lang.NoSuchMethodError: controller.MainFrame: method <init>()V not found
+	at asteroidsclient.AsteroidsClient.main(AsteroidsClient.java:37)

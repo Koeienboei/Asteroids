@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/OperatorHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/updates/Update.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/Server.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/SmallAsteroid.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/view/ServerPanel.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/test/model/AsteroidsModelTest.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/ClientInputHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/Game.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/Asteroid.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/ClientStateChange.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/ClientData.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/GameObject.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/AsteroidsModel.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/updates/ControllerUpdate.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/InputHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/asteroidsserver/AsteroidsServer.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/packeges/ClientStatePacket.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/controller/MainFrame.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/UpdateQueue.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/updates/BulletUpdate.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/packeges/Packet.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/LargeAsteroid.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/updates/AsteroidUpdate.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/packeges/LogoutPacket.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/Spaceship.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/ClientOuputHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/Bullet.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/MediumAsteroid.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/packeges/UpdatePacket.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/ClientState.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/updates/SpaceshipUpdate.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/packeges/ServerPacket.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/controller/SpaceshipController.java</file>
+        </group>
+    </open-files>
+</project-private>
