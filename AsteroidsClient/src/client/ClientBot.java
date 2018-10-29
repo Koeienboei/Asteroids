@@ -18,6 +18,8 @@ import packeges.UpdatePacket;
  * @author Tom
  */
 public class Client {
+
+    private MainFrame mainFrame;
     
     private Game game;
     private Spaceship spaceship;
@@ -29,7 +31,8 @@ public class Client {
     private Address operatorAddress;
     private Address serverAddress;
     
-    public Client(Address operatorAddress) {
+    public Client(Address operatorAddress, MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
         this.operatorAddress = operatorAddress;
         
         initialize();
@@ -37,6 +40,7 @@ public class Client {
     
     private void initialize() {
         game = new Game(this);
+        mainFrame.getGamePanel().setClient(this);
         operatorHandler = new OperatorHandler(this, operatorAddress);
     }
     
@@ -67,28 +71,35 @@ public class Client {
     }
   
     public void initialize(ServerPacket serverPacket) {
+        System.out.println("Initializing with server packet: " + serverPacket.getServerAddress() + " (" + serverPacket.getHeight() + "x" + serverPacket.getWidth() + ")");
         serverAddress = serverPacket.getServerAddress();
         serverHandler = new ServerHandler(this, serverAddress);
         
         game.initModel(serverPacket.getHeight(), serverPacket.getWidth());
+        mainFrame.getGamePanel().setGame(game);
         
         login();
         serverHandler.getInput().start();
+        
+        Thread gameThread = new Thread(game);
+        gameThread.start();
     }
     
     public void initialize(InitPacket initPacket) {
-        if (initPacket.isLast()) {
+        if (!initPacket.isLast()) {
+            game.getModel().addUpdates(initPacket.getUpdates());
+        } else {
             spaceship = new Spaceship(initPacket.getSpaceshipUpdate(), game.getModel());
             game.getModel().addGameObject(spaceship);
+            mainFrame.getGamePanel().addKeyListener(spaceship.getSpaceshipController());
             spaceship.getSpaceshipController().addObserver(serverHandler.getOutput());
             this.setState(PLAYING);
-            Thread controllerThread = new Thread(spaceship.getSpaceshipController());
-            controllerThread.start();
         }
     }
 
     public void update(UpdatePacket updatePacket) {
-        
+        //System.out.println(updatePacket);
+        game.getModel().addUpdates(updatePacket.getUpdates());
     }
 
     public ClientState getClientState() {
@@ -96,6 +107,7 @@ public class Client {
     }
 
     public void setState(ClientState clientState) {
+        //System.out.println("Client state is now: " + clientState);
         this.clientState = clientState;
     }
 

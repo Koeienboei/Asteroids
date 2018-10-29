@@ -1,56 +1,95 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package operator;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
 import packeges.Address;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Observable;
+import packeges.ServerPacket;
 
 /**
- * This class represents an InputHandler for the Server to receive packages
  *
  * @author Tom
  */
-public class ServerHandler extends Thread {
+public class ServerData extends Observable {
 
-    private final Operator operator;
-    private ServerSocket serverSocket;
+    private Operator operator;
 
-    public ServerHandler(Operator operator) {
+    private Address addressForClient;
+
+    private Socket socket;
+    private ServerInputHandler input;
+    private ServerOutputHandler output;
+
+    private LinkedList<ClientData> clients;
+
+    private int height;
+    private int width;
+
+    public ServerData(Socket socket, Operator operator) {
         this.operator = operator;
-        
-        try {
-            serverSocket = new ServerSocket();
-            serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
-        } catch (IOException ex) {
-            System.err.println("Failed te create server socket");
-        }
-    }
-    
-    @Override
-    public void run() {
-        while (operator.isRunning()) {
-            try {
-                Socket socket = serverSocket.accept();
-                operator.addServer(new ServerData(socket, operator));
-            } catch (IOException ex) {
-                System.err.println("Failed to connect with server");
-            }
-        }
+        this.socket = socket;
+
+        clients = new LinkedList<>();
+        input = new ServerInputHandler(this, operator, socket);
+        output = new ServerOutputHandler(this, operator, socket);
     }
 
-    public void close() {
-        try {
-            serverSocket.close();
-        } catch (IOException ex) {
-            System.err.println("Failed to close server handler");
-        }
+    public void initialize(ServerPacket serverPacket) {
+        addressForClient = serverPacket.getServerAddress();
+        height = serverPacket.getHeight();
+        width = serverPacket.getWidth();
+        setChanged();
+        notifyObservers();
+    }
+
+    public ServerInputHandler getInput() {
+        return input;
+    }
+
+    public ServerOutputHandler getOutput() {
+        return output;
+    }
+
+    public Address getAddressForClient() {
+        return addressForClient;
+    }
+
+    public Address getAddressForOperator() {
+        return new Address(socket.getInetAddress().getHostAddress(), socket.getLocalPort());
     }
     
-    public Address getAddress() {
-        return new Address(serverSocket.getInetAddress().getHostAddress(), serverSocket.getLocalPort());
+    public int getUtility() {
+        return clients.size();
     }
-    
+
+    public void addClient(ClientData clientData) {
+        clients.add(clientData);
+    }
+
+    public void removeClient(ClientData clientData) {
+        clients.remove(clientData);
+    }
+
+    public void shutdown() {
+        System.out.println("Server " + this + " shutting down, not implemented yet");
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    @Override
+    public String toString() {
+        return addressForClient + "[" + clients.size() + "] " + height + "x" + width;
+    }
 }

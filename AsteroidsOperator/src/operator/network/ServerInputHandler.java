@@ -1,11 +1,11 @@
-package client;
+package operator;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 import packeges.Address;
-import packeges.InitPacket;
-import packeges.UpdatePacket;
+import packeges.ClientStatePacket;
+import packeges.ServerPacket;
 
 /**
  * This class represents an InputHandler for the Server to receive packages
@@ -14,11 +14,14 @@ import packeges.UpdatePacket;
  */
 public class ServerInputHandler extends Thread {
 
-    private Client client;
+    private ServerData serverData;
+    private final Operator operator;
     private ObjectInputStream input;
 
-    public ServerInputHandler(Client client, Socket socket) {
-        this.client = client;
+    public ServerInputHandler(ServerData serverData, Operator operator, Socket socket) {
+        this.serverData = serverData;
+        this.operator = operator;
+        
         try {
             input = new ObjectInputStream(socket.getInputStream());
         } catch (IOException ex) {
@@ -28,32 +31,22 @@ public class ServerInputHandler extends Thread {
 
     private Object receive() {
         try {
-            Object packet = input.readObject();
-            return packet;
+            return input.readObject();
         } catch (Exception ex) {
             System.err.println("Failed to receive packet from server");
-            ex.printStackTrace();
         }
         return null;
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (operator.isRunning()) {
             Object packet = receive();
-            if (packet instanceof InitPacket) {
-                client.initialize((InitPacket) packet);
-            } else if (packet instanceof UpdatePacket) {
-                client.update((UpdatePacket) packet);
-            }
-        }
-    }
-
-    public void close() {
-        try {
-            input.close();
-        } catch (IOException ex) {
-            System.err.println("Failed to close input stream of server");
+            if (packet instanceof ServerPacket) {
+                serverData.initialize((ServerPacket) packet);
+            } else if (packet instanceof ClientStatePacket) {
+                operator.changeClientState((ClientStatePacket) packet);
+            } 
         }
     }
     
