@@ -1,7 +1,9 @@
 package model;
 
+import asteroidsserver.AsteroidsServer;
 import java.util.Collection;
 import java.util.Iterator;
+import static java.util.logging.Level.FINE;
 import model.updates.AsteroidUpdate;
 
 /**
@@ -12,6 +14,7 @@ import model.updates.AsteroidUpdate;
 public class SmallAsteroid extends Asteroid {
 
     public SmallAsteroid(double x, double y, double dx, double dy, AsteroidsModel model) {
+        AsteroidsServer.logger.log(FINE, "Create SmallAsteroid");
         this.model = model;
         this.x = x;
         this.y = y;
@@ -22,6 +25,7 @@ public class SmallAsteroid extends Asteroid {
     }
     
     public SmallAsteroid(AsteroidUpdate asteroidUpdate, AsteroidsModel model) {
+        AsteroidsServer.logger.log(FINE, "Create SmallAsteroid");
         this.id = asteroidUpdate.getObjectId();
         this.model = model;
         this.x = asteroidUpdate.getX();
@@ -35,6 +39,7 @@ public class SmallAsteroid extends Asteroid {
     
     @Override
     protected void calculateCollisions() {
+        AsteroidsServer.logger.log(FINE, "Calculate collisions SmallAsteroid");
         Collection<Bullet> bullets = model.getBullets();
         Iterator<Bullet> it = bullets.iterator();
         while (it.hasNext()) {

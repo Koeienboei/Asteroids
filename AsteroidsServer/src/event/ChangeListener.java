@@ -3,16 +3,20 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package server.network.packets;
+package event;
 
-import java.io.Serializable;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
  * @author tomei
  */
-public abstract class Packet implements Serializable {
+public interface ChangeListener {
+  
+  
     
-    static final long serialVersionUID = 256L;
-    
+  public void changeEventReceived(ChangeEvent event);
+  
+
+  
 }

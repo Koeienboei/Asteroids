@@ -3,115 +3,105 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package server;
+package server.network;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import asteroidsserver.AsteroidsServer;
+import static java.lang.Math.max;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Observable;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
 import model.GameObject;
 import model.updates.SpaceshipUpdate;
 import model.updates.Update;
-import packeges.InitPacket;
-import packeges.UpdatePacket;
-import static server.ClientState.ALIVE;
-import static server.ClientState.DEAD;
-import static server.ClientState.INITIALIZE;
+import server.network.packets.InitPacket;
+import server.network.packets.UpdatePacket;
+import server.ClientHandler;
+import server.Server;
+import server.network.basic.OutputHandler;
+import server.network.packets.LogoutPacket;
 
 /**
  *
  * @author Tom
  */
-public class ClientOuputHandler extends Thread {
-    
+public class ClientOutputHandler extends Observable implements Runnable {
+
     private Server server;
-    private ClientData clientData;
+    private ClientHandler clientHandler;
+
+    private OutputHandler output;
+
+    private long calculationTime;
     
-    private Socket socket;
-    private ObjectOutputStream output;
-    
-    private UpdateQueue updateQueue;
-    
-    public ClientOuputHandler(ClientData clientData, Server server, Socket socket) {
+    private volatile boolean running;
+
+    public ClientOutputHandler(ClientHandler clientHandler, Server server) {
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Create");
         this.server = server;
-        this.clientData = clientData;
-        this.socket = socket;
+        this.clientHandler = clientHandler;
+
+        output = new OutputHandler(clientHandler.getSocket());
         
-        try {
-            output = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException ex) {
-            System.out.println("[ERROR] Failed to open socket output stream of client: " + clientData);
-        }
-        
-        this.updateQueue = new UpdateQueue(clientData, server.getGame().getModel());
+        this.calculationTime = 0;
+        this.running = false;
     }
-    
-    public void send(Object packet) {
-        try {
-            output.writeObject(packet);
-            output.flush();
-            output.reset();
-        } catch (IOException ex) {
-            System.out.println("[ERROR] Failed to send packet to client: " + clientData);
-            clientData.logout();
-        }
-    }
-    
-    private InitPacket createInitPacket() {
+
+    public void sendInitPacket() {
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Create InitPacket");
         LinkedList<Update> updates = new LinkedList<>();
         LinkedList<GameObject> gameObjects = server.getGame().getModel().getGameObjects();
         Iterator<GameObject> it = gameObjects.iterator();
         while (it.hasNext()) {
             updates.add(it.next().getUpdate());
         }
-        return new InitPacket(updates);
+        output.send(new InitPacket(updates));
     }
-    
-    private InitPacket createLastInitPacket() {
-        server.getGame().spawnNewSpacehipForClient(clientData);
-        return new InitPacket(new SpaceshipUpdate(clientData.getSpaceship()));
+
+    public void sendSpaceship() {
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Create last InitPacket");
+        output.send(new InitPacket(new SpaceshipUpdate(clientHandler.getSpaceship())));
     }
-    
-    public void initialize() {
-        send(createInitPacket());
-        send(createLastInitPacket());
-    }
-    
+
     private synchronized void update() {
-        while (clientData.getState() == ALIVE || clientData.getState() == DEAD) {
-            UpdatePacket updatePacket = updateQueue.pop();
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Start updating Client");
+        long time;
+        while (running) {
+            time = System.currentTimeMillis();
+            UpdatePacket updatePacket = clientHandler.getUpdateQueue().pop();
             if (updatePacket != null) {
-                send(updatePacket);
+                output.send(updatePacket);
             }
             try {
-                this.wait(40);
+                calculationTime = System.currentTimeMillis() - time;
+                this.wait(max(0, 40 - calculationTime));
             } catch (InterruptedException ex) {
-                System.out.println("[ERROR] Failed to wait in update function of client: " + clientData);
+                AsteroidsServer.logger.log(SEVERE, "[ClientOutputHandler] Failed to wait after sending UpdatePacket");
             }
         }
     }
-    
-    public void close() {
-        try {
-            output.close();
-        } catch (IOException ex) {
-            System.out.println("[ERROR] Failed to close output stream of client: " + clientData);
-        }
+
+    public void sendLogoutPacket() {
+        output.send(new LogoutPacket());
     }
     
     @Override
     public void run() {
-        initialize();
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Start");
+        running = true;
         update();
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] End of run function");
     }
     
-    public UpdateQueue getUpdateQueue() {
-        return updateQueue;
+    public void stopRunning() {
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Stop running");
+        running = false;
     }
-    
-    public ClientData getClientData() {
-        return clientData;
+
+    public long getCalculationTime() {
+        return calculationTime;
     }
-    
+
 }

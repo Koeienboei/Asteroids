@@ -3,77 +3,71 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package server;
+package server.network;
 
+import asteroidsserver.AsteroidsServer;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.Socket;
-import packeges.UpdatePacket;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+import server.ClientHandler;
+import server.network.packets.LogoutPacket;
+import server.network.packets.Packet;
+import server.network.packets.UpdatePacket;
+import server.Server;
 import static server.ClientState.ALIVE;
-import static server.ClientState.DEAD;
-import static server.ClientState.INITIALIZE;
+import server.network.basic.InputHandler;
 
 /**
  *
  * @author Tom
  */
 public class ClientInputHandler extends Thread {
-    
+
     private Server server;
-    private ClientData clientData;
-    
-    private Socket socket;
-    private ObjectInputStream input;
-    
-    public ClientInputHandler(ClientData clientData, Server server, Socket socket) {
+    private ClientHandler clientHandler;
+
+    private InputHandler input;
+    private volatile boolean running;
+
+    public ClientInputHandler(ClientHandler clientHandler, Server server) {
+        AsteroidsServer.logger.log(INFO, "Create ClientInputHandler");
         this.server = server;
-        this.clientData = clientData;
-        this.socket = socket;
+        this.clientHandler = clientHandler;
+
+        input = new InputHandler(clientHandler.getSocket());
         
-        try {
-            input = new ObjectInputStream(socket.getInputStream());
-        } catch (IOException ex) {
-            System.out.println("[ERROR] Failed to open socket input stream of client: " + clientData);
-        }
+        this.running = false;
     }
-    
-    private Object receive() {
-        try {
-            return input.readObject();
-        } catch (Exception ex) {
-            System.out.println("[ERROR] Failed to receive packet from client: " + clientData);
-            clientData.logout();
-            
-        }
-        return null;
-    }
-    
+
     private void update() {
-        while (clientData.getState() == INITIALIZE || clientData.getState() == ALIVE || clientData.getState() == DEAD) {
-            Object packet = receive();
-            if (packet instanceof UpdatePacket && clientData.getState() == ALIVE) {
+        AsteroidsServer.logger.log(INFO, "Start receiving updates from Client");
+        while (running) {
+            Packet packet = input.receive();
+            if (packet instanceof UpdatePacket && clientHandler.getState() == ALIVE) {
                 UpdatePacket updatePacket = (UpdatePacket) packet;
                 server.getGame().getModel().addUpdate(updatePacket.getUpdate());
                 server.getGame().updateClientQueues(updatePacket.getUpdate());
             }
+            if (packet instanceof LogoutPacket) {
+                clientHandler.logout();
+            }
         }
     }
-    
-    public void close() {
-        try {
-            input.close();
-        } catch (IOException ex) {
-            System.out.println("[ERROR] Failed to close client input: " + clientData);
-        }
-    }
-    
+
     @Override
     public void run() {
+        AsteroidsServer.logger.log(INFO, "Start ClientInputHandler");
+        running = true;
         update();
+        AsteroidsServer.logger.log(INFO, "[ClientInputHandler] End of run function");
     }
     
-    public ClientData getClientData() {
-        return clientData;
+    public void stopRunning() {
+        AsteroidsServer.logger.log(INFO, "[ClientInputHandler] Stop running");
+        running = false;
     }
-    
+
 }

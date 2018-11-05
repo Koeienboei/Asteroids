@@ -3,57 +3,55 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package server;
+package server.network;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import packeges.Address;
-import packeges.ClientStatePacket;
-import static server.ServerState.SHUTDOWN;
+import asteroidsserver.AsteroidsServer;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import server.Server;
+import server.network.basic.InputHandler;
+import server.network.packets.MarkShutdownPacket;
+import server.network.packets.Packet;
+import server.network.packets.ShutdownPacket;
 
 /**
  *
  * @author Tom
  */
-public class OperatorHandler implements Observer {
+public class OperatorInputHandler extends Thread {
     
-    private Socket socket;
-    private ObjectOutputStream output;
+    private Server server;
+    private OperatorConnector operatorConnector;
+    private InputHandler input;
+    private volatile boolean running;
     
-    public OperatorHandler(Address operatorAddress) {
-        try {
-            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort());
-            output = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException ex) {
-            System.err.println("Failed to connect to operator");
-        }
+    public OperatorInputHandler(OperatorConnector operatorConnector, Server server) {
+        AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Create");
+        this.server = server;
+        this.operatorConnector = operatorConnector;
+        this.input = new InputHandler(operatorConnector.getSocket());
+        this.running = false;
     }
-   
-    public void send(Object packet) {
-        try {
-            output.writeObject(packet);
-        } catch (IOException ex) {
-            System.err.println("Failed to send packet to operator");
-        }
-    }
-
+    
     @Override
-    public void update(Observable o, Object clientData) {
-        send(new ClientStatePacket((ClientData) clientData));
+    public void run() {
+        AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Start");
+        running = true;
+        while (running) {
+            Packet packet = input.receive();
+            if (packet instanceof MarkShutdownPacket) {
+                server.markShutdown();
+            }
+            if (packet instanceof ShutdownPacket) {
+                server.shutdown();
+            }
+        }
+        AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] End of run function");
     }
     
-    public void close() {
-        try {
-            output.close();
-            socket.close();
-        } catch (IOException ex) {
-            System.err.println("Failed to close operator handler");
-        }
+    public void stopRunning() {
+        AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Stop running");
+        running = false;
     }
     
 }

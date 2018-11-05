@@ -1,37 +1,39 @@
 package model;
 
+import asteroidsserver.AsteroidsServer;
 import controller.SpaceshipController;
 import static java.lang.Math.sqrt;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Random;
+import static java.util.logging.Level.FINE;
 import model.updates.ControllerUpdate;
 import model.updates.SpaceshipUpdate;
 import model.updates.Update;
-import server.ClientData;
+import server.ClientHandler;
 import static server.ClientState.ALIVE;
 import static server.ClientState.DEAD;
 
 /**
- * De klasse die een ruimteschip representeert. De klasse wordt bestuurd door
- * middel van een KeyManager, die doorgeeft op welke knoppen gedrukt wordt.
+ * De klasse die een ruimteschip representeert. De klasse wordt bestuurd door middel van een KeyManager, die doorgeeft op welke knoppen gedrukt wordt.
  */
 public class Spaceship extends GameObject {
-    
-    private ClientData clientData;
+
+    private ClientHandler clientHandler;
     private SpaceshipController sc;
 
     private double direction;
-    
+
     private int stepsTillFire;
-    
+
     private boolean alive;
     private int stepsTillAlive;
-    
-    public Spaceship(AsteroidsModel model, ClientData clientData) {
+
+    public Spaceship(AsteroidsModel model, ClientHandler clientHandler) {
+        AsteroidsServer.logger.log(FINE, "Create Spaceship");
         this.sc = new SpaceshipController();
         this.model = model;
-        this.clientData = clientData;
+        this.clientHandler = clientHandler;
         this.dx = 0;
         this.dy = 0;
         this.radius = 15;
@@ -42,8 +44,9 @@ public class Spaceship extends GameObject {
         this.delete = false;
         this.alive = false;
     }
-    
+
     public Spaceship(SpaceshipUpdate spaceshipUpdate, AsteroidsModel model) {
+        AsteroidsServer.logger.log(FINE, "Create Spaceship");
         this.id = spaceshipUpdate.getObjectId();
         this.x = spaceshipUpdate.getX();
         this.y = spaceshipUpdate.getY();
@@ -56,30 +59,31 @@ public class Spaceship extends GameObject {
         this.sc = new SpaceshipController();
         this.model = model;
     }
-    
+
     public void spawn() {
+        AsteroidsServer.logger.log(FINE, "Spawn Spaceship");
         Random random = new Random();
         do {
             x = random.nextInt(model.getWidth());
             y = random.nextInt(model.getHeight());
-            System.out.println("Try spawning spaceship at (" + x + "," + y + ")");
         } while (collides());
-        System.out.println("Spawning spaceship succes");
     }
-    
+
     public void reset() {
+        AsteroidsServer.logger.log(FINE, "Reset Spaceship");
         dx = 0;
         dy = 0;
         direction = 0;
         stepsTillFire = 0;
         stepsTillAlive = 0;
         sc.reset();
-        spawn();
+        //spawn();
         setAlive();
     }
 
     @Override
     public void nextStep() {
+        AsteroidsServer.logger.log(FINE, "Next step Spaceship");
         if (alive) {
             //System.out.println("Speed: (" + dx + "," + dy + ")" + " " + sqrt(dx*dx+dy*dy));
             // Draai het ruimteschip indien nodig
@@ -106,14 +110,16 @@ public class Spaceship extends GameObject {
             this.dy *= 0.99;
         }
     }
-    
+
     public void calculateCollisions() {
+        AsteroidsServer.logger.log(FINE, "Calculate collisions Spaceship");
         if (alive && collides()) {
             kill();
         }
     }
-    
+
     public void calculateReset() {
+        AsteroidsServer.logger.log(FINE, "Calculate reset Spaceship");
         if (!alive) {
             if (stepsTillAlive <= 0) {
                 reset();
@@ -122,34 +128,36 @@ public class Spaceship extends GameObject {
             }
         }
     }
-    
+
     public void calculateFire() {
+        AsteroidsServer.logger.log(FINE, "Calculate fire Spaceship");
         this.stepsTillFire = Math.max(0, this.stepsTillFire - 1);
-        if (sc.fireBullets() && stepsTillFire == 0) {
+        if (alive == true && sc.fireBullets() && stepsTillFire == 0) {
             Bullet b = new Bullet(this.x, this.y, this.dx, this.dy, this.direction, model);
             model.addGameObject(b);
             stepsTillFire = 75;
         }
     }
-    
-    public boolean collides() {
-            Collection<Asteroid> asteroids = model.getAsteroids();
-            Iterator<Asteroid> ita = asteroids.iterator();
-            while (ita.hasNext()) {
-                if (this.collides(ita.next())) {
-                    return true;
-                }
-            }
 
-            Collection<Bullet> bullets = model.getBullets();
-            Iterator<Bullet> itb = bullets.iterator();
-            while (itb.hasNext()) {
-                if (this.collides(itb.next())) {
-                    return true;
-                }
+    public boolean collides() {
+        AsteroidsServer.logger.log(FINE, "Collides Spaceship");
+        Collection<Asteroid> asteroids = model.getAsteroids();
+        Iterator<Asteroid> ita = asteroids.iterator();
+        while (ita.hasNext()) {
+            if (this.collides(ita.next())) {
+                return true;
             }
-            
-            return false;
+        }
+
+        Collection<Bullet> bullets = model.getBullets();
+        Iterator<Bullet> itb = bullets.iterator();
+        while (itb.hasNext()) {
+            if (this.collides(itb.next())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void setSpaceshipController(SpaceshipController sc) {
@@ -159,28 +167,31 @@ public class Spaceship extends GameObject {
     public SpaceshipController getSpaceshipController() {
         return sc;
     }
-    
+
     public void setAlive() {
-        clientData.setState(ALIVE);
+        AsteroidsServer.logger.log(FINE, "Set alive Spaceship");
+        clientHandler.setState(ALIVE);
         alive = true;
     }
-    
+
     public void kill() {
-        clientData.setState(DEAD);
+        AsteroidsServer.logger.log(FINE, "Kill Spaceship");
+        clientHandler.setState(DEAD);
         alive = false;
         stepsTillAlive = 125;
     }
-    
+
     public boolean isAlive() {
         return alive;
     }
-    
+
     public double getDirection() {
         return this.direction;
-    }    
+    }
 
     @Override
     public void update(Update update) {
+        AsteroidsServer.logger.log(FINE, "Update Spaceship");
         if (update instanceof SpaceshipUpdate) {
             SpaceshipUpdate spaceshipUpdate = (SpaceshipUpdate) update;
             if (spaceshipUpdate.isDelete()) {
@@ -207,7 +218,7 @@ public class Spaceship extends GameObject {
 
     @Override
     public String toString() {
-        return "Spaceship[" + id + "] p(" + (int)x + "," + (int)y + ") d(" + (int)dx + "," + (int)dy + ")";
+        return "Spaceship[" + id + "] p(" + (int) x + "," + (int) y + ") d(" + (int) dx + "," + (int) dy + ")";
     }
-    
+
 }

@@ -5,9 +5,13 @@
  */
 package server;
 
+import asteroidsserver.AsteroidsServer;
 import static java.lang.Math.max;
 import java.util.Iterator;
 import java.util.Observable;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
 import model.Asteroid;
 import model.AsteroidsModel;
 import model.Bullet;
@@ -31,27 +35,35 @@ public class Game extends Observable implements Runnable {
 
     private int gameObjectIdCounter;
     private int minAmountAsteroids;
+    
+    private long calculationTime;
+    
+    private volatile boolean running;
 
     public Game(Server server, int height, int width, int minAmountAsteroids) {
+        AsteroidsServer.logger.log(FINE, "Create Game");
         this.server = server;
         this.model = new AsteroidsModel(height, width);
         this.gameObjectIdCounter = 0;
         this.minAmountAsteroids = minAmountAsteroids;
+        this.calculationTime = 0;
+        this.running = false;
     }
 
     @Override
     public void run() {
-        System.out.println("Starting game");
+        AsteroidsServer.logger.log(FINE, "[Game] Start");
+        running = true;
         long time;
 
-        while (server.isRunning()) {
+        while (running) {
             time = System.currentTimeMillis();
             nextStep();
             try {
-                System.out.println("Time between nextStep() " + max(0, 40 - (System.currentTimeMillis() - time)));
-                Thread.sleep(max(0, 40 - (System.currentTimeMillis() - time)));
+                calculationTime = System.currentTimeMillis() - time;
+                Thread.sleep(max(0, 40 - calculationTime));
             } catch (InterruptedException ex) {
-                ex.printStackTrace();
+                AsteroidsServer.logger.log(SEVERE, "Failed to wait after next step in Game");
             }
             setChanged();
             notifyObservers();
@@ -59,6 +71,7 @@ public class Game extends Observable implements Runnable {
     }
 
     private void nextStep() {
+        AsteroidsServer.logger.log(FINE, "Next step in Game");
         this.spawnNewAsteroids();
         this.giveNewObjectsIds();
         this.updateClientQueues();
@@ -73,6 +86,7 @@ public class Game extends Observable implements Runnable {
     }
 
     private void spawnNewAsteroids() {
+        AsteroidsServer.logger.log(FINE, "Spawn new Asteroids");
         int spawnAmount = minAmountAsteroids - model.getAsteroids().size();
         while (spawnAmount > 0) {
             model.spawnAsteroid();
@@ -81,6 +95,7 @@ public class Game extends Observable implements Runnable {
     }
 
     private void giveNewObjectsIds() {
+        AsteroidsServer.logger.log(FINE, "Give new objects ids");
         Iterator<GameObject> it = model.getAddQueue().iterator();
         while (it.hasNext()) {
             GameObject gameObject = it.next();
@@ -91,6 +106,7 @@ public class Game extends Observable implements Runnable {
     }
 
     public void updateClientQueues() {
+        AsteroidsServer.logger.log(FINE, "Update ClientQueues ClientOutputHandler");
         Iterator<GameObject> ito = model.getAddQueue().iterator();
         while (ito.hasNext()) {
             GameObject gameObject = ito.next();
@@ -122,34 +138,45 @@ public class Game extends Observable implements Runnable {
     }
 
     public void updateClientQueues(Update update) {
-        Iterator<ClientData> itc = server.getClients().iterator();
+        AsteroidsServer.logger.log(INFO, "Update ClientQueues with one Update");
+        Iterator<ClientHandler> itc = server.getClients().iterator();
         while (itc.hasNext()) {
-            ClientData clientData = itc.next();
-            if (clientData.getState() == ALIVE || clientData.getState() == DEAD) {
+            ClientHandler clientHandler = itc.next();
+            if (clientHandler.getState() == ALIVE || clientHandler.getState() == DEAD) {
                 if (update instanceof ControllerUpdate) {
                     ControllerUpdate controllerUpdate = (ControllerUpdate) update;
-                    if (controllerUpdate.getObjectId() != clientData.getSpaceship().getId()) {
-                        clientData.getOutput().getUpdateQueue().add(update);
+                    if (controllerUpdate.getObjectId() != clientHandler.getSpaceship().getId()) {
+                        clientHandler.getUpdateQueue().add(update);
                     }
                 } else {
-                    clientData.getOutput().getUpdateQueue().remove(update.getObjectId());
-                    clientData.getOutput().getUpdateQueue().add(update);
+                    clientHandler.getUpdateQueue().remove(update.getObjectId());
+                    clientHandler.getUpdateQueue().add(update);
                 }
             }
         }
     }
 
-    public void spawnNewSpacehipForClient(ClientData clientData) {
-        Spaceship spaceship = new Spaceship(model, clientData);
+    public void spawnNewSpacehipForClient(ClientHandler clientHandler) {
+        AsteroidsServer.logger.log(FINE, "Spawn new Spaceship for Client");
+        Spaceship spaceship = new Spaceship(model, clientHandler);
         spaceship.setId(gameObjectIdCounter++);
-        clientData.setSpaceship(spaceship);
+        clientHandler.setSpaceship(spaceship);
         model.addGameObject(spaceship);
         spaceship.spawn();
         spaceship.setAlive();
     }
 
+    public void stopRunning() {
+        AsteroidsServer.logger.log(INFO, "[Game] Stop running");
+        running = false;
+    }
+    
     public AsteroidsModel getModel() {
         return model;
     }
 
+    public long getCalculationTime() {
+        return calculationTime;
+    }
+    
 }

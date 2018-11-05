@@ -3,9 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package packeges;
+package server.network.basic;
 
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
+import java.util.Objects;
+import static java.util.logging.Level.FINE;
 
 /**
  *
@@ -19,6 +22,7 @@ public class Address implements Serializable {
     private int port;
     
     public Address(String ip, int port) {
+        AsteroidsServer.logger.log(FINE, "Create Address: {0}:{1}", new Object[]{ip, port});
         this.ip = ip;
         this.port = port;
     }
@@ -31,13 +35,19 @@ public class Address implements Serializable {
         return port;
     }
     
-    public boolean equals(Address address) {
-        return ip.equals(address.getIp()) && port == address.getPort();
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Address) {
+            Address address = (Address) o;
+            return ip.equals(address.getIp()) && port == address.getPort();
+        } else {
+            return false;
+        }
     }
     
     @Override
     public String toString() {
-        return ip + ":" + port;
+        return ip == null ? "null" : (ip + ":" + port);
     }
     
 }

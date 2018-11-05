@@ -3,11 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package packeges;
+package server.network.packets;
 
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import static java.util.logging.Level.FINE;
 import model.updates.SpaceshipUpdate;
 import model.updates.Update;
 
@@ -23,11 +25,13 @@ public class InitPacket extends Packet implements Serializable {
     private SpaceshipUpdate spaceshipUpdate;
     
     public InitPacket(LinkedList<Update> updates) {
+        AsteroidsServer.logger.log(FINE, "Create InitPacket");
         this.updates = updates;
         spaceshipUpdate = null;
     }
     
     public InitPacket(SpaceshipUpdate spaceshipUpdate) {
+        AsteroidsServer.logger.log(FINE, "Create last InitPacket");
         this.updates = null;
         this.spaceshipUpdate = spaceshipUpdate;
     }
@@ -44,16 +48,9 @@ public class InitPacket extends Packet implements Serializable {
         return spaceshipUpdate;
     }
     
-    public LinkedList<Integer> getObjectIds() {
-        LinkedList<Integer> objectIds = new LinkedList<>();
-        if (!isLast()) {
-            Iterator<Update> it = updates.iterator();
-            while (it.hasNext()) {
-                objectIds.add(it.next().getObjectId());
-            }
-        } else {
-            objectIds.add(spaceshipUpdate.getObjectId());
-        }
-        return objectIds;
+    @Override
+    public String toString() {
+        return !isLast() ? ("InitPacket(" + updates.size() + ")") : ("LastInitPacket(spaceshipUpdate)");
     }
+    
 }

@@ -3,16 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package server.network.packets;
+package event;
 
-import java.io.Serializable;
+import java.util.EventObject;
 
 /**
  *
  * @author tomei
  */
-public abstract class Packet implements Serializable {
-    
-    static final long serialVersionUID = 256L;
-    
+public class ChangeEvent extends EventObject {
+
+    public ChangeEvent(Object o) {
+        super(o);
+    }
+
 }

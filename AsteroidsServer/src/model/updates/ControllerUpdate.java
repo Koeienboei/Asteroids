@@ -5,7 +5,9 @@
  */
 package model.updates;
 
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
+import static java.util.logging.Level.FINE;
 import model.Spaceship;
 
 /**
@@ -25,6 +27,7 @@ public class ControllerUpdate extends Update implements Serializable {
     
     public ControllerUpdate(Spaceship spaceship) {
         super(spaceship);
+        AsteroidsServer.logger.log(FINE, "Create ControllerUpdate[{0}]", spaceship.getId());
         this.spaceship = spaceship;
         this.updateSpeed = 0;
         this.up = spaceship.getSpaceshipController().goForward();
@@ -35,6 +38,7 @@ public class ControllerUpdate extends Update implements Serializable {
 
     @Override
     public void reset() {
+        AsteroidsServer.logger.log(FINE, "Reset ControllerUpdate[{0}]", spaceship.getId());
         this.up = spaceship.getSpaceshipController().goForward();
         this.left = spaceship.getSpaceshipController().goLeft();
         this.right = spaceship.getSpaceshipController().goRight();

@@ -1,10 +1,9 @@
 package model;
 
-import java.io.Serializable;
-import java.nio.ByteBuffer;
+import asteroidsserver.AsteroidsServer;
+import static java.util.logging.Level.FINE;
 import model.updates.BulletUpdate;
 import model.updates.Update;
-import server.ClientData;
 
 /**
  * Deze klasse representeert een kogel. Een kogel heeft altijd een aantal frames
@@ -20,6 +19,7 @@ public class Bullet extends GameObject {
     private int stepsToLive;
 
     public Bullet(double x, double y, double dx, double dy, double direction, AsteroidsModel model) {
+        AsteroidsServer.logger.log(FINE, "Create Bullet");
         this.stepsToLive = 60;
         this.dx = dx + Math.sin(direction) * 16;
         this.dy = dy - Math.cos(direction) * 16;
@@ -33,6 +33,7 @@ public class Bullet extends GameObject {
     }
     
     public Bullet(BulletUpdate bulletUpdate, AsteroidsModel model) {
+        AsteroidsServer.logger.log(FINE, "Create Bullet");
         this.id = bulletUpdate.getObjectId();
         this.model = model;
         this.dx = bulletUpdate.getDx();
@@ -48,12 +49,17 @@ public class Bullet extends GameObject {
     
     @Override
     public void nextStep() {
+        AsteroidsServer.logger.log(FINE, "Next step Bullet");
         this.x = (model.getWidth() + this.x + this.dx) % model.getWidth();
         this.y = (model.getHeight() + this.y + this.dy) % model.getHeight();
     }
 
     public void increaseLifeTime() {
+        AsteroidsServer.logger.log(FINE, "Increase lifetime Bullet");
         stepsToLive--;
+        if (stepsToLive < 0) {
+            destroy();
+        }
     }
     
     public double getDirection() {
@@ -66,6 +72,7 @@ public class Bullet extends GameObject {
     
     @Override
     public void update(Update update) {
+        AsteroidsServer.logger.log(FINE, "Update Bullet");
         if (update instanceof BulletUpdate) {
             BulletUpdate bulletUpdate = (BulletUpdate) update;
             if (bulletUpdate.isDelete()) {

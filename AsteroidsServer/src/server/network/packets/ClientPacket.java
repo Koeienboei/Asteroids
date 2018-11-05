@@ -4,37 +4,35 @@
  * and open the template in the editor.
  */
 
-package packeges;
+package server.network.packets;
 
+import server.network.basic.Address;
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
+import static java.util.logging.Level.FINE;
 
 /**
  * This class represents a Packet for Login in
  * @author Tom
  */
-public class ServerPacket extends Packet implements Serializable {
+public class ClientPacket extends Packet implements Serializable {
     
     static final long serialVersionUID = 2L;
     
-    private Address serverAddress;
-    private int height, width;
+    private Address clientAddress;
     
-    public ServerPacket(Address serverAddress, int height, int width) {
-        this.serverAddress = serverAddress;
-        this.height = height;
-        this.width = width;
+    public ClientPacket(Address clientAddress) {
+        AsteroidsServer.logger.log(FINE, "Create ClientPacket: {0}", clientAddress);
+        this.clientAddress = clientAddress;
     }
 
-    public Address getServerAddress() {
-        return serverAddress;
+    public Address getClientAddress() {
+        return clientAddress;
     }
 
-    public int getHeight() {
-        return height;
+    @Override
+    public String toString() {
+        return "ClientPacket(" + clientAddress + ")";
     }
-
-    public int getWidth() {
-        return width;
-    }
-
+    
 }

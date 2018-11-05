@@ -5,7 +5,9 @@
  */
 package model.updates;
 
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
+import static java.util.logging.Level.FINE;
 import model.Spaceship;
 
 /**
@@ -26,6 +28,7 @@ public class SpaceshipUpdate extends Update implements Serializable {
     
     public SpaceshipUpdate(Spaceship spaceship) {
         super(spaceship);
+        AsteroidsServer.logger.log(FINE, "Create SpaceshipUpdate[{0}]", spaceship.getId());
         this.spaceship = spaceship;
         this.updateSpeed = 1;
         this.x = spaceship.getX();
@@ -39,6 +42,7 @@ public class SpaceshipUpdate extends Update implements Serializable {
 
     @Override
     public void reset() {
+        AsteroidsServer.logger.log(FINE, "Reset SpaceshipUpdate[{0}]", spaceship.getId());
         this.x = spaceship.getX();
         this.y = spaceship.getY();
         this.dx = spaceship.getDx();

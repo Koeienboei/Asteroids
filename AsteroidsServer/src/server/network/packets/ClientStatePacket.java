@@ -4,14 +4,14 @@
  * and open the template in the editor.
  */
 
-package packeges;
+package server.network.packets;
 
+import server.network.basic.Address;
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
-import java.util.Iterator;
-import java.util.LinkedList;
-import server.ClientData;
+import static java.util.logging.Level.FINE;
+import server.ClientHandler;
 import server.ClientState;
-import server.ClientStateChange;
 
 /**
  * This class represents a Packet for Login in
@@ -24,9 +24,10 @@ public class ClientStatePacket extends Packet implements Serializable {
     private Address clientAddress;
     private ClientState clientState;
     
-    public ClientStatePacket(ClientData clientData) {
-        this.clientAddress = clientData.getAddress();
-        this.clientState = clientData.getState();
+    public ClientStatePacket(ClientHandler clientHandler) {
+        AsteroidsServer.logger.log(FINE, "Create ClientStatePacket: {0}, {1}", new Object[]{clientHandler.getAddress(), clientHandler.getState()});
+        this.clientAddress = clientHandler.getAddress();
+        this.clientState = clientHandler.getState();
     }
 
     public Address getClientAddress() {
@@ -36,5 +37,10 @@ public class ClientStatePacket extends Packet implements Serializable {
     public ClientState getClientState() {
         return clientState;
     }
-
+    
+    @Override
+    public String toString() {
+        return "ClientStatePacket(" + clientAddress + ", " + clientState + ")";
+    }
+    
 }

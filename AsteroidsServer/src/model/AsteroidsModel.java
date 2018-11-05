@@ -96,11 +96,7 @@ public class AsteroidsModel {
     public void increaseBulletLifeTime() {
         Iterator<Bullet> itb = bullets.iterator();
         while (itb.hasNext()) {
-            Bullet bullet = itb.next();
-            bullet.increaseLifeTime();
-            if (bullet.getStepsToLive() < 0) {
-                bullet.destroy();
-            }
+            itb.next().increaseLifeTime();
         }
     }
 

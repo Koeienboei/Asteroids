@@ -1,9 +1,11 @@
 package controller;
 
+import asteroidsserver.AsteroidsServer;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.Serializable;
 import java.util.Observable;
+import static java.util.logging.Level.FINE;
 import model.updates.ControllerUpdate;
 
 /**
@@ -23,6 +25,7 @@ public class SpaceshipController extends Observable implements KeyListener, Seri
     private boolean space;
 
     public SpaceshipController() {
+        AsteroidsServer.logger.log(FINE, "Create Controller");
         up = false;
         left = false;
         right = false;
@@ -30,6 +33,7 @@ public class SpaceshipController extends Observable implements KeyListener, Seri
     }
 
     public void reset() {
+        AsteroidsServer.logger.log(FINE, "Reset Controller");
         up = false;
         left = false;
         right = false;
@@ -53,6 +57,7 @@ public class SpaceshipController extends Observable implements KeyListener, Seri
     }
     
     public void update(ControllerUpdate update) {
+        AsteroidsServer.logger.log(FINE, "Update Controller");
         up = update.goUp();
         right = update.goRight();
         left = update.goLeft();
@@ -61,6 +66,7 @@ public class SpaceshipController extends Observable implements KeyListener, Seri
 
     @Override
     public void keyPressed(KeyEvent e) {
+        AsteroidsServer.logger.log(FINE, "Key pressed");
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
                 this.up = true;
@@ -81,6 +87,7 @@ public class SpaceshipController extends Observable implements KeyListener, Seri
 
     @Override
     public void keyReleased(KeyEvent e) {
+        AsteroidsServer.logger.log(FINE, "Key released");
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
                 this.up = false;

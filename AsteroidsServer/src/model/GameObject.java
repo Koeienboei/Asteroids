@@ -1,8 +1,10 @@
 package model;
 
+import asteroidsserver.AsteroidsServer;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
+import static java.util.logging.Level.FINE;
 import model.updates.Update;
 
 /**
@@ -93,11 +95,15 @@ public abstract class GameObject {
 	double x = Math.abs(this.x - o.getX());
 	double y = Math.abs(this.y - o.getY());
 	double distance = Math.sqrt(x * x + y * y);
-	return distance < this.getRadius() + o.getRadius();
+        boolean collides = distance < this.getRadius() + o.getRadius();
+        AsteroidsServer.logger.log(FINE, "Object collides Object: {0}", collides);
+	return collides;
     }
     
     public int getMinimalStepsTillInRange(GameObject gameObject) {
-        return (int) (max(0,(distance(gameObject)-600)) / (maxSpeed+gameObject.getMaxSpeed()));
+        int minimalStepsTillInRange = (int) (max(0,(distance(gameObject)-600)) / (maxSpeed+gameObject.getMaxSpeed()));
+        AsteroidsServer.logger.log(FINE, "Object minimal steps in range of Object: {0}", minimalStepsTillInRange);
+        return minimalStepsTillInRange;
     }
     
     private double xDistance(GameObject gameObject) {

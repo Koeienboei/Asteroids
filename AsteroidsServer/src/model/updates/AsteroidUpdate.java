@@ -5,7 +5,9 @@
  */
 package model.updates;
 
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
+import static java.util.logging.Level.FINE;
 import model.Asteroid;
 import model.LargeAsteroid;
 import model.MediumAsteroid;
@@ -28,6 +30,7 @@ public class AsteroidUpdate extends Update implements Serializable {
     
     public AsteroidUpdate(Asteroid asteroid) {
         super(asteroid);
+        AsteroidsServer.logger.log(FINE, "Create AsteroidsUpdate[{0}]", asteroid.getId());
         this.asteroid = asteroid;
         this.updateSpeed = 25;
         this.x = asteroid.getX();
@@ -42,6 +45,7 @@ public class AsteroidUpdate extends Update implements Serializable {
 
     @Override
     public void reset() {
+        AsteroidsServer.logger.log(FINE, "Reset AsteroidsUpdate[{0}]", asteroid.getId());
         this.x = asteroid.getX();
         this.y = asteroid.getY();
         this.dx = asteroid.getDx();

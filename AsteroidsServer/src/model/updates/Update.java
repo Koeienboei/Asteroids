@@ -5,7 +5,9 @@
  */
 package model.updates;
 
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
+import static java.util.logging.Level.FINE;
 import model.GameObject;
 
 /**
@@ -19,6 +21,7 @@ public abstract class Update implements Serializable {
     protected int objectId;
     
     public Update(GameObject gameObject) {
+        AsteroidsServer.logger.log(FINE, "Create Update[{0}]", gameObject.getId());
         this.gameObject = gameObject;
         this.objectId = gameObject.getId();
     }

@@ -1,55 +1,49 @@
-package server;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package server.network.basic;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
+import java.io.ObjectInputStream;
 import java.net.Socket;
-import packeges.Address;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import server.network.packets.Packet;
 
 /**
- * This class represents an InputHandler for the Server to receive packages
  *
- * @author Tom
+ * @author tomei
  */
-public class InputHandler extends Thread {
+public class InputHandler {
 
-    private final Server server;
-    private ServerSocket serverSocket;
+    private Logger logger = Logger.getGlobal();
+    
+    private ObjectInputStream input;
 
-    public InputHandler(Server server) {
-        this.server = server;
-        
+    public InputHandler(Socket socket) {
+        logger.log(Level.FINE, "[InputHandler] Create");
         try {
-            serverSocket = new ServerSocket();
-            serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
+            input = new ObjectInputStream(socket.getInputStream());
         } catch (IOException ex) {
-            System.out.println("[ERROR] Failed to create server socket");
+            logger.log(Level.SEVERE, "[InputHandler] Failed to create ObjectInputStream");
         }
     }
-    
-    @Override
-    public void run() {
-        while (server.isRunning()) {
-            try {
-                Socket socket = serverSocket.accept();
-                server.addClient(socket);
-            } catch (IOException ex) {
-                System.out.println("[ERROR] Failed to connect with client");
+
+    public Packet receive() {
+        logger.log(Level.FINE, "[InputHandler] Receive packet");
+        try {
+            Object o = input.readObject();
+            if (o instanceof Packet) {
+                Packet packet = (Packet) o;
+                logger.log(Level.FINE, "[InputHandler] Received packet: {0}", packet);
+                return (Packet) o;
             }
+        } catch (IOException | ClassNotFoundException ex) {
+            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet");
         }
+        return null;
     }
 
-    public void close() {
-        try {
-            serverSocket.close();
-        } catch (IOException ex) {
-            System.out.println("[ERROR] Failed to close input handler");
-        }
-    }
-    
-    public Address getAddress() {
-        return new Address(serverSocket.getInetAddress().getHostAddress(), serverSocket.getLocalPort());
-    }
-    
 }

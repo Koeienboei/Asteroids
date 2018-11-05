@@ -4,9 +4,13 @@
  * and open the template in the editor.
  */
 
-package packeges;
+package server.network.packets;
 
+import server.network.basic.Address;
+import asteroidsserver.AsteroidsServer;
 import java.io.Serializable;
+import static java.util.logging.Level.FINE;
+import server.Server;
 
 /**
  * This class represents a Packet for Login in
@@ -20,6 +24,7 @@ public class ServerPacket extends Packet implements Serializable {
     private int height, width;
     
     public ServerPacket(Address serverAddress, int height, int width) {
+        AsteroidsServer.logger.log(FINE, "Create ServerPacket");
         this.serverAddress = serverAddress;
         this.height = height;
         this.width = width;
@@ -37,4 +42,9 @@ public class ServerPacket extends Packet implements Serializable {
         return width;
     }
 
+    @Override
+    public String toString() {
+        return "ServerPacket(" + serverAddress + ", " + height + ", " + width + ")";
+    }
+    
 }
