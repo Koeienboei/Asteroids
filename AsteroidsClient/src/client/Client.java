@@ -1,130 +1,127 @@
 package client;
 
-import packeges.Address;
+import client.network.OperatorConnector;
+import server.network.basic.Address;
 import static client.ClientState.CLOSE;
+import static client.ClientState.CONNECT;
 import static client.ClientState.GET_SERVER;
+import static client.ClientState.INITIALIZE;
 import static client.ClientState.LOGIN;
 import static client.ClientState.LOGOUT;
-import static client.ClientState.PLAYING;
-import controller.MainFrame;
+import client.network.ServerConnector;
+import java.io.IOException;
+import java.util.logging.FileHandler;
+import static java.util.logging.Level.ALL;
+import static java.util.logging.Level.FINE;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import model.Spaceship;
-import packeges.InitPacket;
-import packeges.ServerPacket;
-import packeges.UpdatePacket;
+import server.network.packets.InitPacket;
+import server.network.packets.ServerPacket;
+import server.network.packets.UpdatePacket;
 
 /**
  * This class represents a Server that can host an Asteroidsgame
  *
  * @author Tom
  */
-public class Client {
+public abstract class Client extends Thread {
 
-    private MainFrame mainFrame;
-    
-    private Game game;
-    private Spaceship spaceship;
-    private ClientState clientState;
+    private long loggerId;
+    public Logger logger;
+    private FileHandler loggerFileHandler;
 
-    private OperatorHandler operatorHandler;
-    private ServerHandler serverHandler;
+    protected Spaceship spaceship;
+    protected volatile ClientState clientState;
     
-    private Address operatorAddress;
-    private Address serverAddress;
+    protected OperatorConnector operatorConnector;
+    protected ServerConnector serverConnector;
     
-    public Client(Address operatorAddress, MainFrame mainFrame) {
-        this.mainFrame = mainFrame;
-        this.operatorAddress = operatorAddress;
-        
-        initialize();
+    protected volatile boolean running;
+
+    public Client(Address operatorAddress) {
+        initializeLogger();
+        logger.log(FINE, "[Client] Create");
+        operatorConnector = new OperatorConnector(this, operatorAddress);
+        serverConnector = new ServerConnector(this);
+        running = false;
     }
-    
-    private void initialize() {
-        game = new Game(this);
-        mainFrame.getGamePanel().setClient(this);
-        operatorHandler = new OperatorHandler(this, operatorAddress);
+
+    private void initializeLogger() {
+        loggerId = System.currentTimeMillis();
+        logger = Logger.getLogger("Client[" + loggerId + "]Logs");
+        try {
+            loggerFileHandler = new FileHandler("C:\\Users\\tomei\\Dropbox\\Bachelor project\\Version 2.4\\Client[" + loggerId + "]Logs.log");
+            logger.addHandler(loggerFileHandler);
+            SimpleFormatter formatter = new SimpleFormatter();
+            loggerFileHandler.setFormatter(formatter);
+        } catch (SecurityException | IOException e) {
+        }
+        logger.setLevel(ALL);
     }
-    
-    public void start() {
-        getServer();
-        operatorHandler.start();
-    }
-    
-    public void getServer() {
+
+    @Override
+    public void run() {
+        logger.log(FINE, "[Client] Start");
+        running = true;
+        setState(CONNECT);
+        operatorConnector.connect();
         setState(GET_SERVER);
-        operatorHandler.connect();
-    }
-    
-    public void login() {
-        setState(LOGIN);
-        serverHandler.login();
-    }
-    
-    public void logout() {
-        setState(LOGOUT);
-        serverHandler.logout();
-    }
-    
-    public void close() {
-        setState(CLOSE);
-        serverHandler.close();
-        operatorHandler.close();
-    }
-  
-    public void initialize(ServerPacket serverPacket) {
-        System.out.println("Initializing with server packet: " + serverPacket.getServerAddress() + " (" + serverPacket.getHeight() + "x" + serverPacket.getWidth() + ")");
-        serverAddress = serverPacket.getServerAddress();
-        serverHandler = new ServerHandler(this, serverAddress);
-        
-        game.initModel(serverPacket.getHeight(), serverPacket.getWidth());
-        mainFrame.getGamePanel().setGame(game);
-        
-        login();
-        serverHandler.getInput().start();
-        
-        Thread gameThread = new Thread(game);
-        gameThread.start();
-    }
-    
-    public void initialize(InitPacket initPacket) {
-        if (!initPacket.isLast()) {
-            game.getModel().addUpdates(initPacket.getUpdates());
-        } else {
-            spaceship = new Spaceship(initPacket.getSpaceshipUpdate(), game.getModel());
-            game.getModel().addGameObject(spaceship);
-            mainFrame.getGamePanel().addKeyListener(spaceship.getSpaceshipController());
-            spaceship.getSpaceshipController().addObserver(serverHandler.getOutput());
-            this.setState(PLAYING);
+        while(running) {
+            ServerPacket serverPacket = operatorConnector.getInput().getServer();
+            if (serverConnector.isLoggedIn()) {
+                setState(LOGOUT);
+                serverConnector.logout();
+            }
+            setState(INITIALIZE);
+            initialize(serverPacket);
+            setState(LOGIN);
+            serverConnector.login();
+            setState(INITIALIZE);
+            serverConnector.getInput().start();
         }
     }
 
-    public void update(UpdatePacket updatePacket) {
-        //System.out.println(updatePacket);
-        game.getModel().addUpdates(updatePacket.getUpdates());
+    public void stopRunning() {
+        running = false;
     }
+    
+    public abstract void logoutServer();
+
+    public void close() {
+        logger.log(FINE, "[Client] Close");
+        setState(CLOSE);
+        this.stopRunning();
+        serverConnector.close();
+        operatorConnector.disconnect();
+        System.exit(0);
+    }
+
+    public abstract void initialize(ServerPacket serverPacket);
+
+    public abstract void initialize(InitPacket initPacket);
+
+    public abstract void update(UpdatePacket updatePacket);
 
     public ClientState getClientState() {
         return clientState;
     }
 
     public void setState(ClientState clientState) {
-        //System.out.println("Client state is now: " + clientState);
+        logger.log(FINE, "[Client] Change state to: {0}", clientState);
         this.clientState = clientState;
     }
 
-    public Address getOperatorAddress() {
-        return operatorAddress;
-    }
-
-    public Address getServerAddress() {
-        return serverAddress;
-    }
-    
     public Spaceship getSpaceship() {
         return spaceship;
     }
 
-    public Game getGame() {
-        return game;
+    public OperatorConnector getOperatorConnector() {
+        return operatorConnector;
     }
-    
+
+    public ServerConnector getServerConnector() {
+        return serverConnector;
+    }
+
 }

@@ -3,22 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package client;
+package client.network;
 
+import client.Client;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import packeges.Address;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+import server.network.basic.Address;
+import server.network.packets.ClientPacket;
 
 /**
  *
  * @author tomei
  */
-public class ServerHandler {
+public class ServerConnector {
 
-    private Address address;
+    private Address serverAddress;
 
     private Socket socket;
     private ServerInputHandler input;
@@ -26,48 +29,74 @@ public class ServerHandler {
 
     private Client client;
 
-    public ServerHandler(Client client, Address address) {
-        this.address = address;
+    public ServerConnector(Client client) {
+        client.logger.log(FINE, "[ServerConnector] Create");
         this.client = client;
+        this.initialize();
     }
 
+    private void initialize() {
+        client.logger.log(FINE, "[ServerConnector] Initialize");
+        serverAddress = null;
+        socket = new Socket();
+        try {
+            socket.setTcpNoDelay(true);
+        } catch (SocketException ex) {
+            client.logger.log(SEVERE, "[ServerConnector] Failed to set socket to no delay (ClientState = {0})", client.getClientState());
+        }
+    }
+    
     public void login() {
-        System.out.println("Log into server");
-        if (address == null) {
-            System.err.println("Trying to login without server address");
+        client.logger.log(FINE, "[ServerConnector] Login to Server");
+        if (serverAddress == null) {
+            client.logger.log(SEVERE, "[ServerConnector] Trying to login to Server without a Server Address (ClientState = {0})", client.getClientState());
             System.exit(0);
         }
         try {
-            System.out.println("Creating socket for connection with server");
-            socket = new Socket(address.getIp(), address.getPort());
-            try {
-                socket.setTcpNoDelay(true);
-            } catch (SocketException ex) {
-                System.err.println("Failed to set client socket to no delay");
-            }
-            System.out.println("Creating output for connection with server");
+            socket.connect(new InetSocketAddress(serverAddress.getIp(), serverAddress.getPort()));
+
+            client.getOperatorConnector().getOutput().send(new ClientPacket(new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort())));
+
             output = new ServerOutputHandler(client, socket);
-            System.out.println("Creating input for connection with server");
             input = new ServerInputHandler(client, socket);
-            System.out.println("Done loggin in");
         } catch (IOException ex) {
-            System.err.println("Failed to connect to server");
+            client.logger.log(SEVERE, "[ServerConnector] Failed to set up connection with Server(ClientState = {0})", client.getClientState());
         }
     }
 
-    public void logout() {
-        output.logout();
+    public void sendLogoutPacket() {
+        output.sendLogoutPacket();
     }
-
+    
+    public void logout() {
+        if (output != null) {
+            output.stopRunning();
+        }
+        if (input != null) {
+            input.stopRunning();
+        }
+    }
+    
     public void close() {
-        input.close();
-        output.close();
-
+        client.logger.log(FINE, "[ServerConnector] Close");
         try {
             socket.close();
         } catch (IOException ex) {
-            System.err.println("Failed to close connection to server");
+            client.logger.log(SEVERE, "[ServerConnector] Failed to close socket (ClientState = {0})", client.getClientState());
         }
+    }
+
+    public Address getServerAddress() {
+        return serverAddress;
+    }
+
+    public void setServerAddress(Address serverAddress) {
+        client.logger.log(FINE, "[ServerConnector] Set Server Address to: {0}", serverAddress);
+        this.serverAddress = serverAddress;
+    }
+
+    public boolean isLoggedIn() {
+        return serverAddress != null;
     }
 
     public ServerOutputHandler getOutput() {

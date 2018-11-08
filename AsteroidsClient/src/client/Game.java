@@ -5,11 +5,15 @@
  */
 package client;
 
+import asteroidsclient.AsteroidsClient;
 import static client.ClientState.INITIALIZE;
 import static client.ClientState.LOGIN;
 import static client.ClientState.PLAYING;
 import static java.lang.Math.max;
 import java.util.Observable;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import model.AsteroidsModel;
 
 /**
@@ -20,22 +24,28 @@ public class Game extends Observable implements Runnable {
     
     private Client client;
     private AsteroidsModel model;
+    private volatile boolean running;
     
     public Game(Client client) {
+        client.logger.log(FINE, "[Game] Create");
         this.client = client;
+        this.running = false;
     }
     
     @Override
     public void run() {
+        client.logger.log(FINE, "[Game] Start");
+        running = true;
         long time;
         
-        while (runCondition()) {
+        while (running) {
             time = System.currentTimeMillis();
             nextStep();
             try {
+                client.logger.log(FINE, "[Game] Wait for {0}", max(0,40 - (System.currentTimeMillis() - time)));
                 Thread.sleep(max(0,40 - (System.currentTimeMillis() - time)));
             } catch (InterruptedException ex) {
-                ex.printStackTrace();
+                client.logger.log(SEVERE, "[Game] Failed to wait");
             }
             setChanged();
             notifyObservers();
@@ -43,6 +53,7 @@ public class Game extends Observable implements Runnable {
     }
     
     private void nextStep() {
+        client.logger.log(FINE, "[Game] Next step");
 	model.addNewObjects();
         model.removeOldObjects();
 	model.update();
@@ -50,11 +61,12 @@ public class Game extends Observable implements Runnable {
     }
  
     public void initModel(int height, int width) {
+        client.logger.log(FINE, "[Game] Initialize Model");
         model = new AsteroidsModel(height, width);
     }
     
-    private boolean runCondition() {
-        return model != null && (client.getClientState() == LOGIN || client.getClientState() == INITIALIZE || client.getClientState() == PLAYING);
+    public void stopRunning() {
+        running = false;
     }
 
     public AsteroidsModel getModel() {

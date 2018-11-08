@@ -1,15 +1,21 @@
-package client;
+package client.network;
 
+import asteroidsclient.AsteroidsClient;
+import client.Client;
+import static client.ClientState.CLOSE;
+import client.network.basic.OutputHandler;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import model.updates.ControllerUpdate;
-import packeges.LogoutPacket;
-import packeges.UpdatePacket;
+import server.network.packets.LogoutPacket;
+import server.network.packets.Packet;
+import server.network.packets.UpdatePacket;
 
 /**
  * This class represents an OutputHandler for the Server to send packages
@@ -19,42 +25,25 @@ import packeges.UpdatePacket;
 public class ServerOutputHandler extends Thread implements Observer {
 
     private final Client client;
-    private ObjectOutputStream output;
+    private OutputHandler output;
 
     public ServerOutputHandler(Client client, Socket socket) {
+        client.logger.log(FINE, "[ServerOutputHandler] Create");
         this.client = client;
-        try {
-            output = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException ex) {
-            System.err.println("Failed to open socket output stream of server");
-        }
+        this.output = new OutputHandler(socket, client);
     }
     
-    private void send(Object packet) {
-        try {
-            output.writeObject(packet);
-        } catch (IOException ex) {
-            System.err.println("Failed to send packet to server");
-        }
+    public void sendLogoutPacket() {
+        output.send(new LogoutPacket());
     }
     
-    public void logout() {
-        send(new LogoutPacket());
-    }
-    
-    public void close() {
-        try {
-            output.close();
-        } catch (IOException ex) {
-            System.err.println("Failed to close output stream of server");
-        }
-    }
-
     @Override
     public void update(Observable o, Object arg) {
-        //System.out.println("Sending update packet");
-        ControllerUpdate controllerUpdate = new ControllerUpdate(client.getSpaceship());
-        //System.out.println(controllerUpdate);
-        send(new UpdatePacket(controllerUpdate));
+        client.logger.log(FINE, "[ServerOutputHandler] Observed update");
+        output.send(new UpdatePacket(new ControllerUpdate(client.getSpaceship())));
+    }
+    
+    public void stopRunning() {
+        client.getSpaceship().getSpaceshipController().deleteObservers();
     }
 }

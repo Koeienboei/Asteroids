@@ -1,67 +1,60 @@
-package client;
+package client.network;
 
+import client.Client;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.Socket;
-import packeges.Address;
-import packeges.ServerPacket;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+import server.network.basic.Address;
+import server.network.packets.Packet;
+import server.network.packets.ServerPacket;
 
 /**
  * This class represents an InputHandler for the Server to receive packages
  *
  * @author Tom
  */
-public class OperatorHandler extends Thread {
+public class OperatorConnector extends Thread {
 
     private Client client;
-    private Address operatorAddress;
     private Socket socket;
-    private ObjectInputStream input;
+    private Address operatorAddress;
+    private OperatorInputHandler input;
+    private OperatorOutputHandler output;    
 
-    public OperatorHandler(Client client, Address operatorAddress) {
+    public OperatorConnector(Client client, Address operatorAddress) {
+        client.logger.log(FINE, "[OperatorConnector] Create");
         this.client = client;
+        this.socket = null;
         this.operatorAddress = operatorAddress;
     }
-    
+
     public void connect() {
+        client.logger.log(FINE, "[OperatorConnector] Login to Operator");
         try {
-            System.out.println("Connecting to operator");
             socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort());
-            System.out.println("Connected to operator");
-            input = new ObjectInputStream(socket.getInputStream());
-            System.out.println("Got inputstream to operator");
+            output = new OperatorOutputHandler(socket, client);
+            input = new OperatorInputHandler(socket, client);
         } catch (IOException ex) {
-            System.err.println("Failed to connect to operator");
+            client.logger.log(SEVERE, "[OperatorConnector] Failed to set up connection with Operator");
         }
     }
 
-    private Object receive() {
+    public void disconnect() {
+        client.logger.log(FINE, "[OperatorConnector] Close");
         try {
-            return input.readObject();
-        } catch (Exception ex) {
-            System.err.println("Failed to receive packet from operator");
-        }
-        return null;
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            System.out.println("Receiving packet");
-            Object packet = receive();
-            if (packet instanceof ServerPacket) {
-                client.initialize((ServerPacket) packet);
-            }
-        }
-    }
-
-    public void close() {
-        try {
-            input.close();
             socket.close();
         } catch (IOException ex) {
-            System.err.println("Failed to close connection to operator");
+            client.logger.log(SEVERE, "[OperatorConnector] Failed to close socket");
         }
     }
-    
+
+    public OperatorInputHandler getInput() {
+        return input;
+    }
+
+    public OperatorOutputHandler getOutput() {
+        return output;
+    }
+
 }

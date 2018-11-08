@@ -1,9 +1,11 @@
 package view;
 
 import client.Client;
+import static client.ClientState.CONNECT;
 import static client.ClientState.GET_SERVER;
 import static client.ClientState.INITIALIZE;
 import static client.ClientState.LOGIN;
+import static client.ClientState.LOGOUT;
 import static client.ClientState.PLAYING;
 import client.Game;
 import java.awt.Color;
@@ -65,13 +67,19 @@ public class GamePanel extends JPanel implements Observer {
             }
         } else if (client.getClientState() == INITIALIZE) {
             g.setColor(Color.white);
-            g.drawString("Initializing...", 360, 395);
+            g.drawString("Initializing game ...", 360, 395);
         } else if (client.getClientState() == LOGIN) {
             g.setColor(Color.white);
-            g.drawString("Connecting to server...", 360, 395);
+            g.drawString("Logging into server ...", 360, 395);
         } else if (client.getClientState() == GET_SERVER) {
             g.setColor(Color.white);
-            g.drawString("Retreiving server info...", 360, 395);
+            g.drawString("Retreiving server info ...", 360, 395);
+        } else if (client.getClientState() == LOGOUT) {
+            g.setColor(Color.white);
+            g.drawString("Logging out from server...", 360, 395);
+        } else if (client.getClientState() == CONNECT) {
+            g.setColor(Color.white);
+            g.drawString("Connecting to operator ...", 360, 395);
         }
     }
 

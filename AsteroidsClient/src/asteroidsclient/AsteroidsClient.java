@@ -6,35 +6,23 @@
 package asteroidsclient;
 
 import controller.MainFrame;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.util.logging.Level;
+import java.io.IOException;
+import java.util.logging.FileHandler;
+import static java.util.logging.Level.ALL;
 import java.util.logging.Logger;
-
+import java.util.logging.SimpleFormatter;
 
 /**
  *
  * @author Tom
  */
 public class AsteroidsClient {
-
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        PrintStream out;
-        PrintStream err;
-        try {
-            out = new PrintStream(new FileOutputStream("output.txt"));
-            err = new PrintStream(new FileOutputStream("err.txt"));
-            System.setOut(out);
-            System.setErr(err);
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(AsteroidsClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
         MainFrame mainFrame = new MainFrame();
     }
-    
+
 }

@@ -11,6 +11,6 @@ package client;
  */
 public enum ClientState {
     
-    GET_SERVER, LOGIN, INITIALIZE, PLAYING, LOGOUT, CLOSE
+    CONNECT, GET_SERVER, LOGIN, INITIALIZE, PLAYING, LOGOUT, CLOSE
     
 }
