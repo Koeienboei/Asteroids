@@ -5,13 +5,16 @@
  */
 package operator;
 
+import asteroidsoperator.AsteroidsOperator;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
-import packeges.Address;
+import server.network.basic.Address;
 
 /**
  *
@@ -28,6 +31,7 @@ public class ServerStarter extends Thread {
     private Address serverHandlerAddress;
     
     public ServerStarter(int serverNumber, int height, int width, Address serverHandlerAddress) {
+        AsteroidsOperator.logger.log(FINE, "[ServerStarter] Create");
         this.serverNumber = serverNumber;
         this.height = height;
         this.width = width;
@@ -36,26 +40,19 @@ public class ServerStarter extends Thread {
     
     @Override
     public void run() {
+        AsteroidsOperator.logger.log(FINE, "[ServerStarter] Start");
         String[] command = {"java", "-jar", asteroidsServerPath , Integer.toString(height), Integer.toString(width), serverHandlerAddress.getIp(), Integer.toString(serverHandlerAddress.getPort())};
         ProcessBuilder probuilder = new ProcessBuilder(command);
 
         Process process;
         try {
-            System.out.println("Creating new output file for server");
-            File outputFile = new File(asteroidsServerOutputPath + "output" + serverNumber + ".txt");
-            File errFile = new File(asteroidsServerOutputPath + "err" + serverNumber + ".txt");
-            
-            probuilder.redirectOutput(outputFile);
-            probuilder.redirectError(errFile);
             process = probuilder.start();
-            
             int status = process.waitFor();
-            System.out.println("Exited with status: " + status);
-        } catch (IOException ex) {
-            Logger.getLogger(Operator.class.getName()).log(Level.SEVERE, null, ex);
+            AsteroidsOperator.logger.log(FINE, "[ServerStarter] Exited with status: {0}", status);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            AsteroidsOperator.logger.log(SEVERE, "[ServerStarter] Server process interupted");
+        } catch (IOException ex) {
+            AsteroidsOperator.logger.log(SEVERE, "[ServerStarter] Server process failed");
         }
     }
     

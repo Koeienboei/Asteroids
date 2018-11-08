@@ -3,17 +3,21 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ServerHandler.java</file>
-            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ClientHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/network/ClientOutputHandler.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/asteroidsoperator/AsteroidsOperator.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ServerStarter.java</file>
-            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ClientData.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/network/ServerOutputHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ServerHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ClientHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/Planner.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/network/ServerInputHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/network/ServerConnector.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/view/MainFrame.java</file>
-            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ServerOutputHandler.java</file>
-            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ServerInputHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/network/ClientConnector.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/Operator.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/view/OperatorPanel.java</file>
-            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/ServerData.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/network/ClientInputHandler.java</file>
+            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsOperator/src/operator/Monitor.java</file>
         </group>
     </open-files>
 </project-private>

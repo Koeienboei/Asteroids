@@ -1,51 +1,67 @@
-package operator;
+package operator.network;
 
+import asteroidsoperator.AsteroidsOperator;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketAddress;
-import packeges.Address;
+import server.network.basic.Address;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import operator.Operator;
+import operator.ServerHandler;
 
 /**
  * This class represents an InputHandler for the Server to receive packages
  *
  * @author Tom
  */
-public class ServerHandler extends Thread {
+public class ServerConnector extends Thread {
 
     private final Operator operator;
     private ServerSocket serverSocket;
+    private volatile boolean running;
 
-    public ServerHandler(Operator operator) {
+    public ServerConnector(Operator operator) {
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Create");
         this.operator = operator;
         
         try {
-            serverSocket = new ServerSocket();
-            serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
+            //serverSocket = new ServerSocket();
+            serverSocket = new ServerSocket(0, 100, InetAddress.getLocalHost());
+            //serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
         } catch (IOException ex) {
-            System.err.println("Failed te create server socket");
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to create ServerSocket");
         }
+        
+        this.running = false;
     }
     
     @Override
     public void run() {
-        while (operator.isRunning()) {
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Start with ServerSocket at {0}", getAddress());
+        running = true;
+        while (running) {
             try {
-                Socket socket = serverSocket.accept();
-                operator.addServer(new ServerData(socket, operator));
+                ServerHandler serverHandler = new ServerHandler(serverSocket.accept(), operator);
+                serverHandler.login();
             } catch (IOException ex) {
-                System.err.println("Failed to connect with server");
+                AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to connect with Server");
             }
         }
     }
 
-    public void close() {
+    public void stopRunning() {
+        running = false;
+    }
+    
+    public void disconnect() {
+        AsteroidsOperator.logger.log(FINE, "[ServerHandler] Close");
         try {
             serverSocket.close();
         } catch (IOException ex) {
-            System.err.println("Failed to close server handler");
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to close ServerSocket");
         }
     }
     

@@ -3,47 +3,36 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package operator;
+package operator.network;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import asteroidsoperator.AsteroidsOperator;
+import operator.ClientHandler;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+import server.network.basic.OutputHandler;
+import server.network.packets.ServerPacket;
 
 /**
  *
  * @author Tom
  */
-public class ServerOutputHandler extends Thread {
+public class ClientOutputHandler {
     
-    private ServerData serverData;
-    private Operator operator;
-    private ObjectOutputStream output;
+    private ClientHandler clientData;
+    private OutputHandler output;
     
-    public ServerOutputHandler(ServerData serverData, Operator operator, Socket socket) {
-        this.serverData = serverData;
-        this.operator = operator;
-        
-        try {
-            output = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException ex) {
-            System.err.println("Failed to open socket output stream of server");
-        }
+    public ClientOutputHandler(ClientHandler clientData) {
+        AsteroidsOperator.logger.log(FINE, "[ClientOutputHandler] Create");
+        this.clientData = clientData;
+        this.output = new OutputHandler(clientData.getSocket());
     }
-    
-    private void send(Object packet) {
-        try {
-            output.writeObject(packet);
-        } catch (IOException ex) {
-            System.err.println("Failed to send packet to server");
+
+    public void sendServerPacket() {
+        if (clientData.getServerHandler() != null) {
+            output.send(new ServerPacket(clientData.getServerHandler().getAddressForClient(), clientData.getServerHandler().getHeight(), clientData.getServerHandler().getWidth()));
+        } else {
+            AsteroidsOperator.logger.log(SEVERE, "Failed sending ServerPacket to client, no server data");
         }
-    }
-    
-    public void close() {
-        try {
-            output.close();
-        } catch (IOException ex) {
-            System.err.println("Failed to close output stream of server");
-        }
-    }
+    }    
     
 }

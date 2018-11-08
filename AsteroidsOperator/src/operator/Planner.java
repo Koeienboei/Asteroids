@@ -5,6 +5,9 @@
  */
 package operator;
 
+import asteroidsoperator.AsteroidsOperator;
+import static java.util.logging.Level.FINE;
+
 /**
  *
  * @author tomei
@@ -18,11 +21,13 @@ public class Planner {
     }
     
     public void acquire() {
+        AsteroidsOperator.logger.log(FINE, "[Planner] Acquire");
         operator.startServer();
     }
     
     public void release() {
-        if (operator.getServerDataList().size() > 1) {
+        AsteroidsOperator.logger.log(FINE, "[Planner] Release");
+        if (operator.getServers().size() > 1) {
             operator.removeServer();
         }
     }

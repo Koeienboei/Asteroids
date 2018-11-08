@@ -1,12 +1,18 @@
-package operator;
+package operator.network;
 
+import asteroidsoperator.AsteroidsOperator;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import packeges.Address;
-import packeges.ServerPacket;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import server.network.basic.Address;
+import operator.ClientHandler;
+import operator.Operator;
+import server.network.packets.ServerPacket;
 import static server.ClientState.LOGIN;
 
 /**
@@ -14,55 +20,49 @@ import static server.ClientState.LOGIN;
  *
  * @author Tom
  */
-public class ClientHandler extends Thread {
+public class ClientConnector extends Thread {
 
     private final Operator operator;
     private ServerSocket serverSocket;
+    private volatile boolean running;
 
-    public ClientHandler(Operator operator) {
+    public ClientConnector(Operator operator) {
+        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Create");
         this.operator = operator;
-        System.out.println("ClientHandler");
         try {
             serverSocket = new ServerSocket();
-            serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
+            serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 8850));
         } catch (IOException ex) {
-            System.err.println("Failed te create server socket");
+            AsteroidsOperator.logger.log(SEVERE, "[ClientHandler] Failed to create ServerSocket");
         }
-        System.out.println("ClientHandler " + getAddress());
-    }
-    
-    private void send(Object packet, ObjectOutputStream output) {
-        try {
-            output.writeObject(packet);
-        } catch (IOException ex) {
-            System.err.println("Failed to send packet to client");
-        }
+        this.running = false;
     }
         
     @Override
     public void run() {
-        while (operator.isRunning()) {
-            System.out.println("Waiting for new client connection");
+        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Start with ServerSocket at {0}", getAddress());
+        running = true;
+        while (running) {
             try {
-                ClientData clientData = new ClientData(serverSocket.accept());
-                operator.addClient(clientData);
-                ServerData serverData = operator.getServer();
-                System.out.println("Chosen server for client: " + serverData);
-                clientData.setServerData(serverData);
-                clientData.setState(LOGIN);
-                send(new ServerPacket(serverData.getAddressForClient(), serverData.getHeight(), serverData.getWidth()), clientData.getOutput());
-                System.out.println("Send server packet to client");
+                ClientHandler clientHandler = new ClientHandler(serverSocket.accept(), operator);
+                Thread clientHandlerThread = new Thread(clientHandler);
+                clientHandlerThread.start();
             } catch (IOException ex) {
-                System.err.println("Failed to connect with client");
+                AsteroidsOperator.logger.log(SEVERE, "[ClientHandler] Failed to set up connection");
             }
         }
     }
 
-    public void close() {
+    public void stopRunning() {
+        running = false;
+    }
+    
+    public void disconnect() {
+        AsteroidsOperator.logger.log(FINE, "[ClientHandler] Close");
         try {
             serverSocket.close();
         } catch (IOException ex) {
-            System.err.println("Failed to close client handler");
+            AsteroidsOperator.logger.log(SEVERE, "[ClientHandler] Failed to close ServerSocket");
         }
     }
     

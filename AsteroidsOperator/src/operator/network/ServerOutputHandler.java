@@ -3,11 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package operator;
+package operator.network;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import asteroidsoperator.AsteroidsOperator;
+import operator.Operator;
+import operator.ServerHandler;
+import static java.util.logging.Level.FINE;
+import server.network.basic.OutputHandler;
+import server.network.packets.MarkShutdownPacket;
+import server.network.packets.ServerPacket;
+import server.network.packets.ShutdownPacket;
 
 /**
  *
@@ -15,35 +20,23 @@ import java.net.Socket;
  */
 public class ServerOutputHandler extends Thread {
     
-    private ServerData serverData;
+    private ServerHandler serverData;
     private Operator operator;
-    private ObjectOutputStream output;
+    private OutputHandler output;
     
-    public ServerOutputHandler(ServerData serverData, Operator operator, Socket socket) {
+    public ServerOutputHandler(ServerHandler serverData, Operator operator) {
+        AsteroidsOperator.logger.log(FINE, "[ServerOutputHandler] Create");
         this.serverData = serverData;
         this.operator = operator;
-        
-        try {
-            output = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException ex) {
-            System.err.println("Failed to open socket output stream of server");
-        }
+        this.output = new OutputHandler(serverData.getSocket());
     }
     
-    private void send(Object packet) {
-        try {
-            output.writeObject(packet);
-        } catch (IOException ex) {
-            System.err.println("Failed to send packet to server");
-        }
+    public void sendMarkShutdownPacket() {
+        output.send(new MarkShutdownPacket());
     }
     
-    public void close() {
-        try {
-            output.close();
-        } catch (IOException ex) {
-            System.err.println("Failed to close output stream of server");
-        }
+    public void sendShutdownPacket() {
+        output.send(new ShutdownPacket());
     }
     
 }

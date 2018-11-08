@@ -5,14 +5,23 @@
  */
 package operator;
 
-import packeges.Address;
+import asteroidsoperator.AsteroidsOperator;
+import server.network.basic.Address;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
-import packeges.ClientStatePacket;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import operator.network.ClientConnector;
+import operator.network.ServerConnector;
+import server.network.packets.ClientStatePacket;
+import server.network.packets.ServerPacket;
+import static server.ClientState.DEAD;
+import static server.ClientState.LOGIN;
+import static server.ClientState.LOGOUT;
 
 /**
  *
@@ -20,15 +29,10 @@ import packeges.ClientStatePacket;
  */
 public class Operator extends Observable implements Observer {
 
-    private ClientHandler clientHandler;
-    private ServerHandler serverHandler;
-    private Collection<ClientData> clients;
-    private Collection<ServerData> servers;
-
-    private volatile boolean running;
-
-    private int ulow;
-    private int uhigh;
+    private ClientConnector clientConnector;
+    private ServerConnector serverConnector;
+    private ConcurrentLinkedQueue<ClientHandler> clients;
+    private ConcurrentLinkedQueue<ServerHandler> servers;
 
     private int serverGameHeight;
     private int serverGameWidth;
@@ -36,159 +40,148 @@ public class Operator extends Observable implements Observer {
     private Monitor monitor;
     private Planner planner;
 
+    private boolean markedShutdown;
+
     public Operator() {
-        clientHandler = new ClientHandler(this);
-        serverHandler = new ServerHandler(this);
+        AsteroidsOperator.logger.log(INFO, "[Operator] Create");
+        clientConnector = new ClientConnector(this);
+        serverConnector = new ServerConnector(this);
 
-        clients = Collections.synchronizedList(new LinkedList<ClientData>());
-        servers = Collections.synchronizedList(new LinkedList<ServerData>());
+        clients = new ConcurrentLinkedQueue<>();
+        servers = new ConcurrentLinkedQueue<>();
 
-        ulow = 30;
-        uhigh = 300;
         serverGameHeight = 6400;
         serverGameWidth = 6400;
 
-        monitor = new Monitor(this);
+        monitor = new Monitor(this, 4, 48, 64, 5);
         planner = new Planner(this);
+
+        markedShutdown = false;
     }
 
     public void start() {
-        running = true;
-        serverHandler.start();
+        AsteroidsOperator.logger.log(INFO, "[Operator] Start");
+        serverConnector.start();
         startServer();
-        clientHandler.start();
+        clientConnector.start();
     }
 
-    public void addClient(ClientData clientData) {
+    public void addClient(ClientHandler clientData) {
+        AsteroidsOperator.logger.log(INFO, "[Operator] Add Client");
         clients.add(clientData);
-        System.out.println("Adding client: " + clientData);
         setChanged();
         notifyObservers();
     }
-    
-    public void removeClient(Address clientAddress) {
-        Iterator<ClientData> it = clients.iterator();
-        while (it.hasNext()) {
-            ClientData clientData = it.next();
-            if (clientData.getAddress().equals(clientAddress)) {
-                it.remove();
-                setChanged();
-                notifyObservers();
-            }
-        }
+
+    public void removeClient(ClientHandler clientHandler) {
+        AsteroidsOperator.logger.log(INFO, "[Operator] Remove Client: {0}", clientHandler.getAddressConnectionServer());
+        clients.remove(clientHandler);
+        setChanged();
+        notifyObservers();
     }
 
-    public ClientData getClientData(Address clientAddress) {
-        Iterator<ClientData> it = clients.iterator();
+    public ClientHandler getClientHandler(Address clientAddress) {
+        AsteroidsOperator.logger.log(INFO, "[Operator] Get Client: {0}", clientAddress);
+        Iterator<ClientHandler> it = clients.iterator();
         while (it.hasNext()) {
-            ClientData clientData = it.next();
-            if (clientData.getAddress().equals(clientAddress)) {
-                return clientData;
+            ClientHandler clientHandler = it.next();
+            if (clientHandler.getAddressConnectionServer() != null && clientHandler.getAddressConnectionServer().equals(clientAddress)) {
+                return clientHandler;
             }
         }
+        AsteroidsOperator.logger.log(SEVERE, "[Operator] Failed to get Client: {0}", clientAddress);
         return null;
     }
 
-    public void changeClientState(ClientStatePacket clientStatePacket) {
-        /*ClientData clientData = getClientData(clientStatePacket.getClientAddress());
-        if (clientData == null) {
-            System.err.println("Trying to change client state that does not exist");
-        }
-        if (clientStatePacket.getClientState() == LOGOUT) {
-            clientData.close();
-            removeClient(clientStatePacket.getClientAddress());
-        } else {
-            clientData.setState(clientStatePacket.getClientState());
-        }
-        setChanged();
-        notifyObservers();*/
-    }
-
-    public void addServer(ServerData serverData) {
-        servers.add(serverData);
-        serverData.addObserver(this);
-        serverData.getInput().start();
+    public void addServer(ServerHandler serverHandler) {
+        AsteroidsOperator.logger.log(INFO, "[Operator] Add Server: {0}", serverHandler.getAddressForOperator());
+        servers.add(serverHandler);
         setChanged();
         notifyObservers();
     }
-    
-    public void removeServer(Address serverAddress) {
-        Iterator<ServerData> it = servers.iterator();
-        while (it.hasNext()) {
-            ServerData serverData = it.next();
-            if (serverData.getAddressForOperator().equals(serverAddress)) {
-                it.remove();
-                setChanged();
-                notifyObservers();
-            }
+
+    public void removeServer(ServerHandler serverHandler) {
+        AsteroidsOperator.logger.log(INFO, "[Operator] Remove Server: {0}", serverHandler.getAddressForOperator());
+        servers.remove(serverHandler);
+        setChanged();
+        notifyObservers();
+        if (markedShutdown && servers.isEmpty()) {
+            shutdown();
         }
     }
-    
-    public ServerData getServer() {
-        ServerData lowestUtilityServer = null;
-        Iterator<ServerData> it = servers.iterator();
-        if (it.hasNext()) {
-            lowestUtilityServer = it.next();
-        }
+
+    public ServerHandler getServer() {
+        AsteroidsOperator.logger.log(INFO, "[Operator] Get Server with lowest Utility");
+        ServerHandler lowestUtilityServer = null;
+        Iterator<ServerHandler> it = servers.iterator();
         while (it.hasNext()) {
-            ServerData server = it.next();
-            if (server.getUtility() < lowestUtilityServer.getUtility()) {
-                lowestUtilityServer = server;
+            ServerHandler serverData = it.next();
+            if (serverData.isMarkedShutdown()) {
+                continue;
+            }
+            if (lowestUtilityServer == null) {
+                lowestUtilityServer = serverData;
+            } else if (serverData.getUtility() < lowestUtilityServer.getUtility()) {
+                lowestUtilityServer = serverData;
             }
         }
         return lowestUtilityServer;
     }
 
     public void startServer() {
-        ServerStarter serverStarter = new ServerStarter(servers.size(), serverGameHeight, serverGameWidth, serverHandler.getAddress());
+        AsteroidsOperator.logger.log(INFO, "[Operator] Start Server");
+        ServerStarter serverStarter = new ServerStarter(servers.size(), serverGameHeight, serverGameWidth, serverConnector.getAddress());
         serverStarter.start();
     }
 
     public void removeServer() {
-        ServerData lowestUtilityServer;
-        Iterator<ServerData> it = servers.iterator();
+        AsteroidsOperator.logger.log(INFO, "[Operator] Remove Server");
+        ServerHandler lowestUtilityServer;
+        Iterator<ServerHandler> it = servers.iterator();
         if (it.hasNext()) {
             lowestUtilityServer = it.next();
         } else {
             return;
         }
         while (it.hasNext()) {
-            ServerData serverData = it.next();
+            ServerHandler serverData = it.next();
             if (serverData.getUtility() < lowestUtilityServer.getUtility()) {
                 lowestUtilityServer = serverData;
             }
         }
-        lowestUtilityServer.shutdown();
+        lowestUtilityServer.markShutdown();
         setChanged();
         notifyObservers();
     }
 
-    public void close() {
-        running = false;
-        clientHandler.close();
-        serverHandler.close();
-        System.exit(0);
-    }
-
-    public Collection<ServerData> getServerDataList() {
-        return servers;
-    }
-
-    public boolean isRunning() {
-        return running;
-    }
-
-    public float getUtilization() {
-        int utilization = 0;
-        Iterator<ServerData> it = servers.iterator();
+    public void shutdown() {
+        AsteroidsOperator.logger.log(INFO, "[Operator] Shutdown");
+        markedShutdown = true;
+        clientConnector.stopRunning();
+        clientConnector.disconnect();
+        serverConnector.stopRunning();
+        serverConnector.disconnect();
+        Iterator<ServerHandler> it = servers.iterator();
         while (it.hasNext()) {
-            utilization = +it.next().getUtility();
+            it.next().shutdown();
+        }
+    }
+
+    public double getAverageUtilization() {
+        int utilization = 0;
+        Iterator<ServerHandler> it = servers.iterator();
+        while (it.hasNext()) {
+            utilization += it.next().getUtility();
         }
         if (servers.isEmpty()) {
             return 0;
         } else {
             return utilization / servers.size();
         }
+    }
+
+    public ConcurrentLinkedQueue<ServerHandler> getServers() {
+        return servers;
     }
 
     public int getServerGameHeight() {
@@ -199,24 +192,17 @@ public class Operator extends Observable implements Observer {
         return serverGameWidth;
     }
 
-    public int getUlow() {
-        return ulow;
+    public ClientConnector getClientConnector() {
+        return clientConnector;
     }
 
-    public int getUhigh() {
-        return uhigh;
-    }
-
-    public ClientHandler getClientHandler() {
-        return clientHandler;
-    }
-
-    public ServerHandler getServerHandler() {
-        return serverHandler;
+    public ServerConnector getServerConnector() {
+        return serverConnector;
     }
 
     @Override
     public void update(Observable o, Object o1) {
+        AsteroidsOperator.logger.log(FINE, "[Operator] Observed Update");
         setChanged();
         notifyObservers();
     }

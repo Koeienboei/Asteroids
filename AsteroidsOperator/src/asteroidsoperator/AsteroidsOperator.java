@@ -5,6 +5,12 @@
  */
 package asteroidsoperator;
 
+import java.io.IOException;
+import java.util.logging.FileHandler;
+import static java.util.logging.Level.ALL;
+import static java.util.logging.Level.INFO;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import view.MainFrame;
 import operator.Operator;
 
@@ -14,10 +20,22 @@ import operator.Operator;
  */
 public class AsteroidsOperator {
 
+    public static final Logger logger = Logger.getGlobal();
+    private static FileHandler fh;
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        try { 
+            fh = new FileHandler("C:\\Users\\tomei\\Dropbox\\Bachelor project\\Version 2.4\\OperatorLogs.log");
+            logger.addHandler(fh);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fh.setFormatter(formatter);
+        } catch (SecurityException | IOException e) {
+        }
+        logger.setLevel(INFO);
+        
         Operator operator = new Operator();
         MainFrame mainFrame = new MainFrame(operator);
         operator.start();
