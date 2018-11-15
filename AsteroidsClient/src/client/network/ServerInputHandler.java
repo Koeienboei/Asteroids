@@ -47,7 +47,6 @@ public class ServerInputHandler extends Thread {
             } else if (packet instanceof UpdatePacket) {
                 client.update((UpdatePacket) packet);
             } else if (packet instanceof LogoutPacket) {
-                client.logoutServer();
                 client.close();
             }
         }

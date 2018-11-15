@@ -2,6 +2,7 @@ package client.network;
 
 import client.Client;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
@@ -32,12 +33,14 @@ public class OperatorConnector extends Thread {
     public void connect() {
         client.logger.log(FINE, "[OperatorConnector] Login to Operator");
         try {
-            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort());
-            output = new OperatorOutputHandler(socket, client);
-            input = new OperatorInputHandler(socket, client);
+            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort(), InetAddress.getLocalHost(), 8951);
+            socket.setTcpNoDelay(true);
+            socket.setSoTimeout(40);
         } catch (IOException ex) {
             client.logger.log(SEVERE, "[OperatorConnector] Failed to set up connection with Operator");
         }
+        output = new OperatorOutputHandler(socket, client);
+        input = new OperatorInputHandler(socket, client);
     }
 
     public void disconnect() {

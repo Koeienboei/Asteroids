@@ -92,7 +92,7 @@ public abstract class Client extends Thread {
         logger.log(FINE, "[Client] Close");
         setState(CLOSE);
         this.stopRunning();
-        serverConnector.close();
+        serverConnector.logout();
         operatorConnector.disconnect();
         System.exit(0);
     }

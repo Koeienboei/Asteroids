@@ -7,6 +7,7 @@ package client.network;
 
 import client.Client;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -32,42 +33,35 @@ public class ServerConnector {
     public ServerConnector(Client client) {
         client.logger.log(FINE, "[ServerConnector] Create");
         this.client = client;
-        this.initialize();
+        this.serverAddress = null;
+        this.socket = null;
     }
 
     private void initialize() {
         client.logger.log(FINE, "[ServerConnector] Initialize");
-        serverAddress = null;
-        socket = new Socket();
+        client.getOperatorConnector().getOutput().send(new ClientPacket(new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort())));
+
         try {
             socket.setTcpNoDelay(true);
+            //socket.setSoTimeout(40);
         } catch (SocketException ex) {
-            client.logger.log(SEVERE, "[ServerConnector] Failed to set socket to no delay (ClientState = {0})", client.getClientState());
+            client.logger.log(SEVERE, "[ServerConnector] Failed to set socket settings (ClientState = {0})", client.getClientState());
         }
+
+        output = new ServerOutputHandler(client, socket);
+        input = new ServerInputHandler(client, socket);
     }
-    
+
     public void login() {
         client.logger.log(FINE, "[ServerConnector] Login to Server");
-        if (serverAddress == null) {
-            client.logger.log(SEVERE, "[ServerConnector] Trying to login to Server without a Server Address (ClientState = {0})", client.getClientState());
-            System.exit(0);
-        }
-        try {
-            socket.connect(new InetSocketAddress(serverAddress.getIp(), serverAddress.getPort()));
-
-            client.getOperatorConnector().getOutput().send(new ClientPacket(new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort())));
-
-            output = new ServerOutputHandler(client, socket);
-            input = new ServerInputHandler(client, socket);
-        } catch (IOException ex) {
-            client.logger.log(SEVERE, "[ServerConnector] Failed to set up connection with Server(ClientState = {0})", client.getClientState());
-        }
+        connect();
+        initialize();
     }
 
     public void sendLogoutPacket() {
         output.sendLogoutPacket();
     }
-    
+
     public void logout() {
         if (output != null) {
             output.stopRunning();
@@ -75,9 +69,21 @@ public class ServerConnector {
         if (input != null) {
             input.stopRunning();
         }
+        disconnect();
     }
-    
-    public void close() {
+
+    private void connect() {
+        try {
+            socket = new Socket(serverAddress.getIp(), serverAddress.getPort(), InetAddress.getLocalHost(), 8950);
+        } catch (NullPointerException ex) {
+            client.logger.log(SEVERE, "[ServerConnector] Trying to login to Server without a Server Address (ClientState = {0})", client.getClientState());
+        } catch (IOException ex) {
+            client.logger.log(SEVERE, "[ServerConnector] Failed to set up connection with Server(ClientState = {0})", client.getClientState());
+        }
+
+    }
+
+    public void disconnect() {
         client.logger.log(FINE, "[ServerConnector] Close");
         try {
             socket.close();
