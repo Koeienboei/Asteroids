@@ -10,12 +10,15 @@ import operator.network.ServerOutputHandler;
 import asteroidsoperator.AsteroidsOperator;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import server.network.basic.Address;
 import java.util.LinkedList;
 import java.util.Observable;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import server.network.packets.ServerPacket;
 import server.network.packets.ShutdownPacket;
 
@@ -44,14 +47,24 @@ public class ServerHandler extends Observable {
         AsteroidsOperator.logger.log(INFO, "[ServerHandler] Create");
         this.operator = operator;
         this.socket = socket;
+        initialize();
+    }
 
+    private void initialize() {
+        markedShutdown = false;
+        
+        try {
+            socket.setTcpNoDelay(true);
+            socket.setSoTimeout(40);
+        } catch (SocketException ex) {
+            AsteroidsOperator.logger.log(INFO, "[ServerHandler] Failed to set socket settings");
+        }
+        
         clients = new LinkedList<>();
         output = new ServerOutputHandler(this, operator);
         input = new ServerInputHandler(this, operator);
-        
-        markedShutdown = false;
     }
-
+    
     public void initialize(ServerPacket serverPacket) {
         AsteroidsOperator.logger.log(INFO, "[ServerHandler] Initialize with {0}", serverPacket);
         addressForClient = serverPacket.getServerAddress();

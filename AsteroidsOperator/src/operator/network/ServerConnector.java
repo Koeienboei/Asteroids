@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import server.network.basic.Address;
+import java.net.SocketTimeoutException;
 import static java.util.logging.Level.FINE;
+import server.network.basic.Address;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import operator.Operator;
@@ -24,15 +25,14 @@ public class ServerConnector extends Thread {
     private volatile boolean running;
 
     public ServerConnector(Operator operator) {
-        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Create");
+        AsteroidsOperator.logger.log(INFO, "[ServerConnector] Create");
         this.operator = operator;
         
         try {
-            //serverSocket = new ServerSocket();
-            serverSocket = new ServerSocket(0, 100, InetAddress.getLocalHost());
-            //serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
+            serverSocket = new ServerSocket(8851, 100, InetAddress.getLocalHost());
+            serverSocket.setSoTimeout(40);
         } catch (IOException ex) {
-            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to create ServerSocket");
+            AsteroidsOperator.logger.log(SEVERE, "[ServerConnector] Failed to create ServerSocket");
         }
         
         this.running = false;
@@ -40,28 +40,32 @@ public class ServerConnector extends Thread {
     
     @Override
     public void run() {
-        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Start with ServerSocket at {0}", getAddress());
+        AsteroidsOperator.logger.log(INFO, "[ServerConnector] Start with ServerSocket at {0}", getAddress());
         running = true;
         while (running) {
             try {
+                AsteroidsOperator.logger.log(INFO, "[ServerConnector] Waiting for connection");
                 ServerHandler serverHandler = new ServerHandler(serverSocket.accept(), operator);
                 serverHandler.login();
+            } catch (SocketTimeoutException ex) {
+                AsteroidsOperator.logger.log(FINE, "[ServerConnector] Socket timeout");
             } catch (IOException ex) {
-                AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to connect with Server");
+                AsteroidsOperator.logger.log(SEVERE, "[ServerConnector] Failed to connect with Server");
             }
         }
     }
 
     public void stopRunning() {
+        AsteroidsOperator.logger.log(INFO, "[ServerConnector] Stop running");
         running = false;
     }
     
     public void disconnect() {
-        AsteroidsOperator.logger.log(FINE, "[ServerHandler] Close");
+        AsteroidsOperator.logger.log(INFO, "[ServerConnector] Close");
         try {
             serverSocket.close();
         } catch (IOException ex) {
-            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to close ServerSocket");
+            AsteroidsOperator.logger.log(SEVERE, "[ServerConnector] Failed to close ServerSocket");
         }
     }
     

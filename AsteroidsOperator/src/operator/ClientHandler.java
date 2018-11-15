@@ -10,6 +10,7 @@ import operator.network.ClientOutputHandler;
 import asteroidsoperator.AsteroidsOperator;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import server.network.basic.Address;
 import java.util.Observable;
 import static java.util.logging.Level.INFO;
@@ -37,11 +38,23 @@ public class ClientHandler implements Runnable {
         AsteroidsOperator.logger.log(INFO, "[ClientHandler] Create");
         this.operator = operator;
         this.socket = socket;
-        this.output = new ClientOutputHandler(this);
-        this.input = new ClientInputHandler(this);
-        this.state = LOGIN;
+        initialize();
     }
-
+    
+    private void initialize() {
+        state = LOGIN;
+        
+        try {
+            socket.setTcpNoDelay(true);
+            socket.setSoTimeout(40);
+        } catch (SocketException ex) {
+            AsteroidsOperator.logger.log(SEVERE, "[ClientHandler] Failed to set socket settings");
+        }
+        
+        output = new ClientOutputHandler(this);
+        input = new ClientInputHandler(this);
+    }
+    
     @Override
     public void run() {
         AsteroidsOperator.logger.log(INFO, "[ClientHandler] Start");
