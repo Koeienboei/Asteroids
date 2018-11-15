@@ -22,7 +22,7 @@ public class OutputHandler {
     private ObjectOutputStream output;
 
     public OutputHandler(Socket socket) {
-        logger.log(Level.FINE, "[OutputHandler] Create");
+        logger.log(Level.INFO, "[OutputHandler] Create with socket {0} {1}", new Object[] {socket == null, socket.getLocalPort()});
         try {
             output = new ObjectOutputStream(socket.getOutputStream());
         } catch (IOException ex) {

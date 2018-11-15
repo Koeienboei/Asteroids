@@ -38,11 +38,14 @@ public class OperatorInputHandler extends Thread {
         AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Start");
         running = true;
         while (running) {
+            AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Receive packet");
             Packet packet = input.receive();
             if (packet instanceof MarkShutdownPacket) {
+                AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Mark for shutdown packet received");
                 server.markShutdown();
             }
             if (packet instanceof ShutdownPacket) {
+                AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Shutdown packet received");
                 server.shutdown();
             }
         }

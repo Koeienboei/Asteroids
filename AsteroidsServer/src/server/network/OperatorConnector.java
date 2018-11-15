@@ -9,6 +9,8 @@ import server.network.OperatorInputHandler;
 import server.network.OperatorOutputHandler;
 import asteroidsserver.AsteroidsServer;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.logging.Level;
 import server.Server;
@@ -38,10 +40,12 @@ public class OperatorConnector {
         this.operatorAddress = operatorAddress;
     }
     
-    public void login() {
+    public void start() {
         AsteroidsServer.logger.log(INFO, "[OperatorConnector] Login");
         connect();
         sendServerPacket();
+        startSendingPackets();
+        startReceivingPackets();
     }
 
     private void sendServerPacket() {
@@ -53,17 +57,17 @@ public class OperatorConnector {
         output.sendShutdownPacket();
     }    
     
-    public void logout() {
+    public void stopRunning() {
         AsteroidsServer.logger.log(INFO, "[OperatorConnector] Logout");
         stopReceivingPackets();
         stopSendingPackets();
-        disconnect();
     }
     
     private void connect() {
         AsteroidsServer.logger.log(INFO, "[OperatorConnector] Connect");
         try {
-            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort());
+            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort(), InetAddress.getLocalHost(), 8901);
+            socket.setSoTimeout(40);
             output = new OperatorOutputHandler(this, server);
             input = new OperatorInputHandler(this, server);
         } catch (IOException ex) {
@@ -71,9 +75,19 @@ public class OperatorConnector {
         }
     }
     
+    private void startReceivingPackets() {
+        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Start receiving packets");
+        input.start();
+    }
+    
     private void stopReceivingPackets() {
         AsteroidsServer.logger.log(INFO, "[OperatorConnector] Stop receiving packets");
         input.stopRunning();
+    }
+    
+    private void startSendingPackets() {
+        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Start sending packets");
+        output.start();
     }
     
     private void stopSendingPackets() {
@@ -81,8 +95,8 @@ public class OperatorConnector {
         output.stopRunning();
     }
     
-    private void disconnect() {
-        AsteroidsServer.logger.log(FINE, "[OperatorData] Disconnect");
+    public void disconnect() {
+        AsteroidsServer.logger.log(INFO, "[OperatorData] Disconnect");
         try {
             socket.close();
         } catch (IOException ex) {

@@ -8,7 +8,9 @@ package server.network.basic;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.logging.Level;
+import static java.util.logging.Level.FINE;
 import java.util.logging.Logger;
 import server.network.packets.Packet;
 
@@ -40,6 +42,8 @@ public class InputHandler {
                 logger.log(Level.FINE, "[InputHandler] Received packet: {0}", packet);
                 return (Packet) o;
             }
+        } catch (SocketTimeoutException ex) {
+            logger.log(FINE, "[InputHandler] Socket timeout");
         } catch (IOException | ClassNotFoundException ex) {
             logger.log(Level.WARNING, "[InputHandler] Failed to receive packet");
         }

@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
@@ -30,8 +31,9 @@ public class ClientConnector extends Thread {
         this.server = server;
         
         try {
-            serverSocket = new ServerSocket();
-            serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
+            serverSocket = new ServerSocket(8900, 100, InetAddress.getLocalHost());
+            serverSocket.setSoTimeout(40);
+            //serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
         } catch (IOException ex) {
             AsteroidsServer.logger.log(SEVERE, "[ClientConnector] Failed to create ServerSocket");
         }
@@ -41,13 +43,22 @@ public class ClientConnector extends Thread {
     
     @Override
     public void run() {
-        AsteroidsServer.logger.log(INFO, "[ClientConnector] Start");
+        AsteroidsServer.logger.log(INFO, "[ClientConnector] Start with ServerSocket at {0}", getAddress());
         this.running = true;
         while (running) {
             try {
-                ClientHandler clientHandler = new ClientHandler(serverSocket.accept(), server);
+                AsteroidsServer.logger.log(INFO, "[ClientConnector] Waiting for incomming connection");
+                Socket socket = serverSocket.accept();
+                AsteroidsServer.logger.log(INFO, "[ClientConnector] Accepted s{0} to c{1}", new Object[]{new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort()), new Address(socket.getInetAddress().getHostAddress(), socket.getPort())});
+                //String s = "string";
+                //AsteroidsServer.logger.log(INFO, "[ClientConnector] After random string creation");
+                //ClientHandler randomClient = new ClientHandler(null, null);
+                //AsteroidsServer.logger.log(INFO, "[ClientConnector] After random clientHandler creation");
+                ClientHandler clientHandler = new ClientHandler(socket, server);
                 Thread clientHandlerThread = new Thread(clientHandler);
                 clientHandlerThread.start();
+            } catch (SocketTimeoutException ex) {
+                AsteroidsServer.logger.log(FINE, "[ClientConnector] Socket timeout");
             } catch (IOException ex) {
                 AsteroidsServer.logger.log(SEVERE, "[ClientConnector] Failed to connect to Client");
             }

@@ -38,24 +38,28 @@ public class ClientHandler extends Observable implements Runnable {
     private Server server;
 
     public ClientHandler(Socket socket, Server server) {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Create with address {0}", new Address(socket.getInetAddress().getHostAddress(), socket.getPort()));
+        //AsteroidsServer.logger.log(INFO, "[ClientHandler] Create with address s{0} to c{1}", new Object[]{new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort()), new Address(socket.getInetAddress().getHostAddress(), socket.getPort())});
         this.socket = socket;
         this.server = server;
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Before initialize");
         this.initialize();
     }
     
     private void initialize() {
-        setState(LOGIN);
+        state = INITIALIZE;
+        
         try {
             socket.setTcpNoDelay(true);
+            //socket.setSoTimeout(40);
         } catch (SocketException ex) {
-            AsteroidsServer.logger.log(SEVERE, "[ClientHandler] Failed to set socket to no delay");
+            AsteroidsServer.logger.log(SEVERE, "[ClientHandler] Failed to set socket settings");
         }
         
         output = new ClientOutputHandler(this, server);
         input = new ClientInputHandler(this, server);
-
+        
         updateQueue = new UpdateQueue(this, server.getGame().getModel());
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Initialized");
     }
 
     @Override
@@ -66,11 +70,8 @@ public class ClientHandler extends Observable implements Runnable {
 
     public void login() {
         AsteroidsServer.logger.log(INFO, "[ClientHandler] Login");
-        setState(LOGIN);
         addToServer();
         addToPanel();
-        setState(INITIALIZE);
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Before send init packet");
         sendInitPacket();
         addToGame();
         sendSpaceship();

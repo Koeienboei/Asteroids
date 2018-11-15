@@ -55,18 +55,16 @@ public class Server extends Observable implements Observer {
 
     public void start() {
         AsteroidsServer.logger.log(INFO, "[Server] Start");
-        loginToOperator();
-        startSendingUpdatesToOperator();
+        connectToOperator();
         startGame();
-        startReceivingLogins();
+        startClientConnector();
     }
 
     public void shutdown() {
         AsteroidsServer.logger.log(INFO, "[Server] Shutdown");
-        logoutClients();
-        stopReceivingLogins();
+        logoutClients();;
         disconnectClientConnector();
-        logoutFromOperator();
+        disconnectFromOperator();
         stopGame();
         System.exit(0);
     }
@@ -77,34 +75,26 @@ public class Server extends Observable implements Observer {
         gameThread.start();
     }
 
-    private void startReceivingLogins() {
+    private void startClientConnector() {
         AsteroidsServer.logger.log(INFO, "[Server] Start receiving logins");
         clientConnector.start();
     }
 
     private void disconnectClientConnector() {
         AsteroidsServer.logger.log(INFO, "[Server] Disconnect client connector");
+        clientConnector.stopRunning();
         clientConnector.disconnect();
     }
 
-    private void stopReceivingLogins() {
-        AsteroidsServer.logger.log(INFO, "[Server] Stop receiving logins");
-        clientConnector.stopRunning();
-    }
-
-    private void startSendingUpdatesToOperator() {
-        AsteroidsServer.logger.log(INFO, "[Server] Start sending updates to operator");
-        this.addObserver(operatorConnector.getOutput());
-    }
-
-    private void loginToOperator() {
+    private void connectToOperator() {
         AsteroidsServer.logger.log(INFO, "[Server] Login to operator");
-        operatorConnector.login();
+        operatorConnector.start();
     }
 
-    private void logoutFromOperator() {
+    private void disconnectFromOperator() {
         AsteroidsServer.logger.log(INFO, "[Server] Logout from operator");
-        operatorConnector.logout();
+        operatorConnector.stopRunning();
+        operatorConnector.disconnect();
     }
 
     private void stopGame() {

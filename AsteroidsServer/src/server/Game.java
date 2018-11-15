@@ -41,7 +41,7 @@ public class Game extends Observable implements Runnable {
     private volatile boolean running;
 
     public Game(Server server, int height, int width, int minAmountAsteroids) {
-        AsteroidsServer.logger.log(FINE, "Create Game");
+        AsteroidsServer.logger.log(INFO, "[Game] Create");
         this.server = server;
         this.model = new AsteroidsModel(height, width);
         this.gameObjectIdCounter = 0;
@@ -52,7 +52,7 @@ public class Game extends Observable implements Runnable {
 
     @Override
     public void run() {
-        AsteroidsServer.logger.log(FINE, "[Game] Start");
+        AsteroidsServer.logger.log(INFO, "[Game] Start");
         running = true;
         long time;
 
@@ -71,7 +71,7 @@ public class Game extends Observable implements Runnable {
     }
 
     private void nextStep() {
-        AsteroidsServer.logger.log(FINE, "Next step in Game");
+        AsteroidsServer.logger.log(INFO, "[Game] Next step in Game");
         this.spawnNewAsteroids();
         this.giveNewObjectsIds();
         this.updateClientQueues();
@@ -106,7 +106,7 @@ public class Game extends Observable implements Runnable {
     }
 
     public void updateClientQueues() {
-        AsteroidsServer.logger.log(FINE, "Update ClientQueues ClientOutputHandler");
+        AsteroidsServer.logger.log(FINE, "[Game] Update ClientQueues ClientOutputHandler");
         Iterator<GameObject> ito = model.getAddQueue().iterator();
         while (ito.hasNext()) {
             GameObject gameObject = ito.next();
@@ -138,7 +138,7 @@ public class Game extends Observable implements Runnable {
     }
 
     public void updateClientQueues(Update update) {
-        AsteroidsServer.logger.log(INFO, "Update ClientQueues with one Update");
+        AsteroidsServer.logger.log(INFO, "[Game] Update ClientQueues with one Update #c{0}", server.getClients().size());
         Iterator<ClientHandler> itc = server.getClients().iterator();
         while (itc.hasNext()) {
             ClientHandler clientHandler = itc.next();

@@ -24,7 +24,7 @@ import server.network.packets.ShutdownSuccesPacket;
  *
  * @author Tom
  */
-public class OperatorOutputHandler extends Thread implements Observer {
+public class OperatorOutputHandler implements Observer {
     
     private Server server;
     private OperatorConnector operatorConnector;
@@ -59,6 +59,11 @@ public class OperatorOutputHandler extends Thread implements Observer {
             output.send(new ClientStatePacket((ClientHandler) o1));
         }
         AsteroidsServer.logger.log(INFO, "[OperatorOutputHandler] End of observed update");
+    }
+    
+    public void start() {
+        AsteroidsServer.logger.log(INFO, "[OperatorOutputHandler] Start");
+        server.addObserver(this);
     }
     
     public void stopRunning() {
