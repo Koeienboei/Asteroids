@@ -1,0 +1,12 @@
+Nov 23, 2018 4:38:45 PM asteroidsserver.AsteroidsServer$1 uncaughtException
+SEVERE: Uncaught exception: 
+java.awt.HeadlessException: 
+No X11 DISPLAY variable was set, but this program performed an operation which requires it.
+	at java.awt.GraphicsEnvironment.checkHeadless(GraphicsEnvironment.java:204)
+	at java.awt.Window.<init>(Window.java:536)
+	at java.awt.Frame.<init>(Frame.java:420)
+	at java.awt.Frame.<init>(Frame.java:385)
+	at javax.swing.JFrame.<init>(JFrame.java:189)
+	at controller.MainFrame.<init>(MainFrame.java:32)
+	at asteroidsserver.AsteroidsServer.main(AsteroidsServer.java:74)
+
