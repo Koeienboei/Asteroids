@@ -7,15 +7,18 @@ package controller;
 
 import client.Client;
 import client.ClientBot;
+import static client.ClientState.CLOSE;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
+import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -82,13 +85,24 @@ public class MainFrame extends JFrame {
         while (it.hasNext()) {
             Client client = it.next();
             client.logger.log(FINE, "[MainFrame] Window closing");
-            client.close();
-            it.remove();
+            client.getServerConnector().sendLogoutPacket();
             try {
-                this.wait(100);
+                this.wait(200);
             } catch (InterruptedException ex) {
             }
         }
+        
+        it = clients.iterator();
+        while (it.hasNext()) {
+            Client client = it.next();
+            while (client.getClientState() != CLOSE) {
+                try {
+                    this.wait(100);
+                } catch (InterruptedException ex) {
+                }
+            }
+        }
+        System.exit(0);
     }
 
     private void initActions() {
