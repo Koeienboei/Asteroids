@@ -6,8 +6,10 @@ import static java.util.logging.Level.INFO;
 import operator.ClientHandler;
 import operator.Operator;
 import operator.ServerHandler;
+import static server.ClientState.LOGOUT;
 import server.network.basic.InputHandler;
 import server.network.packets.ClientStatePacket;
+import server.network.packets.MonitorPacket;
 import server.network.packets.Packet;
 import server.network.packets.ServerPacket;
 import server.network.packets.ShutdownPacket;
@@ -34,23 +36,31 @@ public class ServerInputHandler extends Thread {
 
     @Override
     public void run() {
-        AsteroidsOperator.logger.log(FINE, "[ServerInputHandler] Start");
+        AsteroidsOperator.logger.log(INFO, "[ServerInputHandler] Start");
         running = true;
         while (running) {
             Packet packet = input.receive();
             if (packet instanceof ServerPacket) {
+                AsteroidsOperator.logger.log(FINE, "[ServerInputHandler] Received ServerPacket");
                 serverHandler.initialize((ServerPacket) packet);
             } else if (packet instanceof ClientStatePacket) {
+                AsteroidsOperator.logger.log(FINE, "[ServerInputHandler] Received ClientStatePacket");
                 ClientStatePacket clientStatePacket = (ClientStatePacket) packet;
+                if (clientStatePacket.getClientState() == LOGOUT) {
+                    AsteroidsOperator.logger.log(INFO, "[ServerInputHandler] Received {0}", clientStatePacket);
+                }
                 ClientHandler clientHandler = operator.getClientHandler(clientStatePacket.getClientAddress());
                 if (clientHandler != null) {
                     clientHandler.setState(clientStatePacket.getClientState());
                 }
             } else if (packet instanceof ShutdownPacket) {
+                AsteroidsOperator.logger.log(FINE, "[ServerInputHandler] Received ShutdownPacket");
                 serverHandler.shutdown();
+            } else if (packet instanceof MonitorPacket) {
+                serverHandler.addMonitorPacket((MonitorPacket) packet);
             }
         }
-        AsteroidsOperator.logger.log(INFO, "[ServerInputHandler] End of run function");
+        AsteroidsOperator.logger.log(FINE, "[ServerInputHandler] End of run function");
     }
     
     public void stopRunning() {

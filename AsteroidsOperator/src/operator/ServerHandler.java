@@ -8,17 +8,22 @@ package operator;
 import operator.network.ServerInputHandler;
 import operator.network.ServerOutputHandler;
 import asteroidsoperator.AsteroidsOperator;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Iterator;
 import server.network.basic.Address;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Observable;
 import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
+import server.network.packets.MonitorPacket;
 import server.network.packets.ServerPacket;
 import server.network.packets.ShutdownPacket;
 
@@ -26,7 +31,7 @@ import server.network.packets.ShutdownPacket;
  *
  * @author Tom
  */
-public class ServerHandler extends Observable {
+public class ServerHandler extends Observable implements Runnable {
 
     private Operator operator;
 
@@ -42,6 +47,9 @@ public class ServerHandler extends Observable {
     private int width;
     
     private boolean markedShutdown;
+    
+    private MonitorPacketList monitorPacketList;
+    private BufferedWriter monitorFileWriter;
 
     public ServerHandler(Socket socket, Operator operator) {
         AsteroidsOperator.logger.log(INFO, "[ServerHandler] Create");
@@ -51,18 +59,25 @@ public class ServerHandler extends Observable {
     }
 
     private void initialize() {
-        markedShutdown = false;
+        output = new ServerOutputHandler(this, operator);
+        input = new ServerInputHandler(this, operator);
         
         try {
             socket.setTcpNoDelay(true);
-            socket.setSoTimeout(40);
+            //socket.setSoTimeout(40);
         } catch (SocketException ex) {
-            AsteroidsOperator.logger.log(INFO, "[ServerHandler] Failed to set socket settings");
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to set socket settings");
         }
         
         clients = new LinkedList<>();
-        output = new ServerOutputHandler(this, operator);
-        input = new ServerInputHandler(this, operator);
+        monitorPacketList = new MonitorPacketList(operator.getMonitor().getW());
+        try {
+            monitorFileWriter = new BufferedWriter(new FileWriter(socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + " monitor.txt", true));
+        } catch (IOException ex) {
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to create file writer");
+        }
+        
+        markedShutdown = false;
     }
     
     public void initialize(ServerPacket serverPacket) {
@@ -74,6 +89,11 @@ public class ServerHandler extends Observable {
         notifyObservers();
     }
     
+    @Override
+    public void run() {
+        login();
+    }
+    
     public void login() {
         addToOperator();
         addToPanel();
@@ -81,11 +101,17 @@ public class ServerHandler extends Observable {
     }
     
     public void shutdown() {
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Shutdown");
         sendShutdownPacket();
         stopReceivingPackets();
         disconnect();
         removeFromPanel();
-        removeFromOperator();        
+        removeFromOperator();   
+        try {
+            monitorFileWriter.close();
+        } catch (IOException ex) {
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to close monitor file");
+        }
     }
     
     private void sendMarkShutdownPacket() {
@@ -121,14 +147,24 @@ public class ServerHandler extends Observable {
     }
     
     public void disconnect() {
-        AsteroidsOperator.logger.log(INFO, "[ServerData] Close");
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Disconnect");
         try {
             socket.close();
         } catch (IOException ex) {
-            AsteroidsOperator.logger.log(SEVERE, "[ServerData] Failed to close socket");
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to close socket");
         }
     }
 
+    public void addMonitorPacket(MonitorPacket monitorPacket) {
+        AsteroidsOperator.logger.log(FINE, "[ServerHandler] Adding {0}", monitorPacket);
+        try {
+            monitorFileWriter.write(monitorPacket.toString() + "\n");
+        } catch (IOException ex) {
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to write to monitor file");
+        }
+        monitorPacketList.add(monitorPacket);
+    }
+    
     public Socket getSocket() {
         return socket;
     }
@@ -154,14 +190,14 @@ public class ServerHandler extends Observable {
     }
 
     public void addClient(ClientHandler clientData) {
-        AsteroidsOperator.logger.log(INFO, "[ServerData] Add Client: {0}", clientData.getAddressConnectionServer());
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Add Client: {0}", clientData.getAddressConnectionServer());
         clients.add(clientData);
         setChanged();
         notifyObservers();
     }
 
     public void removeClient(ClientHandler clientData) {
-        AsteroidsOperator.logger.log(INFO, "[ServerData] Remove Client: {0}", clientData.getAddressConnectionServer());
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Remove Client: {0}", clientData.getAddressConnectionServer());
         clients.remove(clientData);
         setChanged();
         notifyObservers();
@@ -183,8 +219,12 @@ public class ServerHandler extends Observable {
         return width;
     }
 
+    public MonitorPacketList getMonitorPacketList() {
+        return monitorPacketList;
+    }    
+
     @Override
     public String toString() {
-        return addressForClient + "[" + clients.size() + "] " + height + "x" + width;
+        return addressForClient + "[" + clients.size() + "]";
     }
 }

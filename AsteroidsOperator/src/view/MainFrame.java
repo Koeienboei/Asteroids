@@ -49,7 +49,7 @@ public class MainFrame extends JFrame {
     private void initGUI() {
         AsteroidsOperator.logger.log(FINE, "[MainFrame] Initialize GUI");
         this.setTitle("Asteroids Operator");
-        this.setSize(800, 800);
+        this.setSize(400, 400);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
 

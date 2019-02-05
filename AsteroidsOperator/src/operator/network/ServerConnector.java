@@ -25,12 +25,12 @@ public class ServerConnector extends Thread {
     private volatile boolean running;
 
     public ServerConnector(Operator operator) {
-        AsteroidsOperator.logger.log(INFO, "[ServerConnector] Create");
+        AsteroidsOperator.logger.log(FINE, "[ServerConnector] Create");
         this.operator = operator;
         
         try {
             serverSocket = new ServerSocket(8851, 100, InetAddress.getLocalHost());
-            serverSocket.setSoTimeout(40);
+            //serverSocket.setSoTimeout(40);
         } catch (IOException ex) {
             AsteroidsOperator.logger.log(SEVERE, "[ServerConnector] Failed to create ServerSocket");
         }
@@ -40,13 +40,14 @@ public class ServerConnector extends Thread {
     
     @Override
     public void run() {
-        AsteroidsOperator.logger.log(INFO, "[ServerConnector] Start with ServerSocket at {0}", getAddress());
+        AsteroidsOperator.logger.log(FINE, "[ServerConnector] Start with ServerSocket at {0}", getAddress());
         running = true;
         while (running) {
             try {
-                AsteroidsOperator.logger.log(INFO, "[ServerConnector] Waiting for connection");
+                AsteroidsOperator.logger.log(FINE, "[ServerConnector] Waiting for connection");
                 ServerHandler serverHandler = new ServerHandler(serverSocket.accept(), operator);
-                serverHandler.login();
+                Thread serverHandlerThread = new Thread(serverHandler);
+                serverHandlerThread.start();
             } catch (SocketTimeoutException ex) {
                 AsteroidsOperator.logger.log(FINE, "[ServerConnector] Socket timeout");
             } catch (IOException ex) {
@@ -56,12 +57,12 @@ public class ServerConnector extends Thread {
     }
 
     public void stopRunning() {
-        AsteroidsOperator.logger.log(INFO, "[ServerConnector] Stop running");
+        AsteroidsOperator.logger.log(FINE, "[ServerConnector] Stop running");
         running = false;
     }
     
     public void disconnect() {
-        AsteroidsOperator.logger.log(INFO, "[ServerConnector] Close");
+        AsteroidsOperator.logger.log(FINE, "[ServerConnector] Close");
         try {
             serverSocket.close();
         } catch (IOException ex) {

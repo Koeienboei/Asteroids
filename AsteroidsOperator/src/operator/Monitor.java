@@ -8,7 +8,10 @@ package operator;
 import asteroidsoperator.AsteroidsOperator;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import server.network.packets.MonitorPacket;
 
 /**
  *
@@ -19,35 +22,39 @@ public class Monitor extends Thread {
     private Operator operator;
     private Planner planner;
 
-    private int uLow;
-    private int uHigh;
-    private int uMax;
-    private int movingAverageLength;
-
-    private LinkedList<Double> averageUtilizationList;
+    private int rLow;
+    private int rHigh;
+    private int rMax;
+    private int W;
     
     private volatile boolean running;
 
-    public Monitor(Operator operator, int uLow, int uHigh, int uMax, int movingAverageLength) {
+    public Monitor(Operator operator, int rLow, int rHigh, int rMax, int W) {
         AsteroidsOperator.logger.log(FINE, "[Monitor] Create");
         this.operator = operator;
-        this.uLow = uLow;
-        this.uHigh = uHigh;
-        this.uMax = uMax;
-        this.movingAverageLength = movingAverageLength;
+        this.rLow = rLow;
+        this.rHigh = rHigh;
+        this.rMax = rMax;
+        this.W = W;
         this.running = false;
     }
 
     @Override
     public synchronized void run() {
         AsteroidsOperator.logger.log(FINE, "[Monitor] Start");
+        MonitorPacket average;
+        double R, X, U;
         running = true;
         while (running) {
-            double averageUtilization = calculateAvarageUtilization();
-            if (averageUtilization > uHigh) {
-                planner.acquire();
-            } else if (averageUtilization < uLow) {
-                planner.release();
+            average = calculateAverage();
+            AsteroidsOperator.logger.log(INFO, "[Monitor] Average: {0}", average);
+            R = average.getResponseTime();
+            X = average.getThroughput();
+            U = average.getUtilization();
+            if (R > rHigh) {
+                //planner.acquire(R, X, U);
+            } else if (R < rLow) {
+                //planner.release(R, X, U);
             }
             try {
                 this.wait(1000);
@@ -56,26 +63,21 @@ public class Monitor extends Thread {
             }
         }
     }
-
-    private void calculateNewState() {
-        averageUtilizationList.remove();
-        averageUtilizationList.add(operator.getAverageUtilization());
-    }
     
-    private double calculateAvarageUtilization() {
-        double averageUtilization = 0.0;
-        Iterator<Double> it = averageUtilizationList.iterator();
+    private MonitorPacket calculateAverage() {
+        MonitorPacket average = new MonitorPacket(0,0,0);
+        Iterator<ServerHandler> it = operator.getServers().iterator();
         while (it.hasNext()) {
-            averageUtilization += it.next();
+            MonitorPacket serverAverage = it.next().getMonitorPacketList().getAverage();
+            average.setResponseTime(average.getResponseTime() + serverAverage.getResponseTime()/operator.getServers().size());
+            average.setThroughput(average.getThroughput() + serverAverage.getThroughput()/operator.getServers().size());
+            average.setUtilization(average.getUtilization() + serverAverage.getUtilization()/operator.getServers().size());
         }
-        return averageUtilization / movingAverageLength;
+        return average;
     }
-    
-    private void initialize() {
-        averageUtilizationList = new LinkedList<>();
-        for (int i = 0; i < movingAverageLength; i++) {
-            averageUtilizationList.add(0.0);
-        }
+
+    public int getW() {
+        return W;
     }
 
     public void stopRunning() {

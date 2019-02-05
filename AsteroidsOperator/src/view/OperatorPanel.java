@@ -24,7 +24,8 @@ import operator.ServerHandler;
  */
 public class OperatorPanel extends JPanel implements Observer {
     
-    private JLabel connectionInformation;
+    private JLabel addressForClients;
+    private JLabel addressForServers;
     private JTextArea serverData;
     
     private Operator operator;
@@ -34,11 +35,13 @@ public class OperatorPanel extends JPanel implements Observer {
         this.operator = operator;
         operator.addObserver(this);
         
-        connectionInformation = new JLabel("Operator address:  " + operator.getClientConnector().getAddress());
+        addressForClients = new JLabel("Address for clients:  " + operator.getClientConnector().getAddress());
+        addressForServers = new JLabel("Address for servers: " + operator.getServerConnector().getAddress());
         serverData = new JTextArea("");
         
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        this.add(connectionInformation);
+        this.add(addressForClients);
+        this.add(addressForServers);
         this.add(serverData);
         
         this.setVisible(true);

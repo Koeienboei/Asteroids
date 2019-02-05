@@ -12,9 +12,11 @@ import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import operator.network.ClientConnector;
 import operator.network.ServerConnector;
 import server.network.packets.ClientStatePacket;
@@ -36,6 +38,7 @@ public class Operator extends Observable implements Observer {
 
     private int serverGameHeight;
     private int serverGameWidth;
+    private int serverPortCounter;
 
     private Monitor monitor;
     private Planner planner;
@@ -43,15 +46,16 @@ public class Operator extends Observable implements Observer {
     private boolean markedShutdown;
 
     public Operator() {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Create");
+        AsteroidsOperator.logger.log(FINE, "[Operator] Create");
         clientConnector = new ClientConnector(this);
         serverConnector = new ServerConnector(this);
 
         clients = new ConcurrentLinkedQueue<>();
         servers = new ConcurrentLinkedQueue<>();
 
-        serverGameHeight = 6400;
-        serverGameWidth = 6400;
+        serverGameHeight = 1600;
+        serverGameWidth = 1600;
+        serverPortCounter = 8900;
 
         monitor = new Monitor(this, 4, 48, 64, 5);
         planner = new Planner(this);
@@ -59,15 +63,15 @@ public class Operator extends Observable implements Observer {
         markedShutdown = false;
     }
 
-    public void start() {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Start");
+    public synchronized void start() {
+        AsteroidsOperator.logger.log(FINE, "[Operator] Start");
         serverConnector.start();
-        startServer();
+        startServers(3);
         clientConnector.start();
     }
 
     public void addClient(ClientHandler clientData) {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Add Client");
+        AsteroidsOperator.logger.log(FINE, "[Operator] Add Client");
         clients.add(clientData);
         setChanged();
         notifyObservers();
@@ -81,7 +85,7 @@ public class Operator extends Observable implements Observer {
     }
 
     public ClientHandler getClientHandler(Address clientAddress) {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Get Client: {0}", clientAddress);
+        AsteroidsOperator.logger.log(FINE, "[Operator] Get Client: {0}", clientAddress);
         Iterator<ClientHandler> it = clients.iterator();
         while (it.hasNext()) {
             ClientHandler clientHandler = it.next();
@@ -111,7 +115,7 @@ public class Operator extends Observable implements Observer {
     }
 
     public ServerHandler getServer() {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Get Server with lowest Utility");
+        AsteroidsOperator.logger.log(FINE, "[Operator] Get Server with lowest Utility");
         ServerHandler lowestUtilityServer = null;
         Iterator<ServerHandler> it = servers.iterator();
         while (it.hasNext()) {
@@ -128,14 +132,26 @@ public class Operator extends Observable implements Observer {
         return lowestUtilityServer;
     }
 
+    public void startServers(int amount) {
+        AsteroidsOperator.logger.log(FINE, "[Operator] Start Servers");
+        for (int i=0; i<amount; i++) {
+            startServer();
+            try {
+                wait(500);
+            } catch (InterruptedException ex) {
+                AsteroidsOperator.logger.log(SEVERE, "[Operator] Failed to wait after spawning new server");
+            }
+        }
+    }
+    
     public void startServer() {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Start Server");
-        ServerStarter serverStarter = new ServerStarter(servers.size(), serverGameHeight, serverGameWidth, serverConnector.getAddress());
+        AsteroidsOperator.logger.log(FINE, "[Operator] Start Server");
+        ServerStarter serverStarter = new ServerStarter();
         serverStarter.start();
     }
 
     public void removeServer() {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Remove Server");
+        AsteroidsOperator.logger.log(FINE, "[Operator] Remove Server");
         ServerHandler lowestUtilityServer;
         Iterator<ServerHandler> it = servers.iterator();
         if (it.hasNext()) {
@@ -155,7 +171,7 @@ public class Operator extends Observable implements Observer {
     }
 
     public void shutdown() {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Shutdown");
+        AsteroidsOperator.logger.log(FINE, "[Operator] Shutdown");
         markedShutdown = true;
         clientConnector.stopRunning();
         clientConnector.disconnect();
@@ -198,6 +214,10 @@ public class Operator extends Observable implements Observer {
 
     public ServerConnector getServerConnector() {
         return serverConnector;
+    }
+
+    public Monitor getMonitor() {
+        return monitor;
     }
 
     @Override

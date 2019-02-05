@@ -29,7 +29,7 @@ public class ClientConnector extends Thread {
     private volatile boolean running;
 
     public ClientConnector(Operator operator) {
-        AsteroidsOperator.logger.log(INFO, "[ClientConnector] Create");
+        AsteroidsOperator.logger.log(FINE, "[ClientConnector] Create");
         this.operator = operator;
         try {
             serverSocket = new ServerSocket(8850, 1000, InetAddress.getLocalHost());
@@ -42,11 +42,11 @@ public class ClientConnector extends Thread {
         
     @Override
     public void run() {
-        AsteroidsOperator.logger.log(INFO, "[ClientConnector] Start with ServerSocket at {0}", getAddress());
+        AsteroidsOperator.logger.log(FINE, "[ClientConnector] Start with ServerSocket at {0}", getAddress());
         running = true;
         while (running) {
             try {
-                AsteroidsOperator.logger.log(INFO, "[ClientConnector] Waiting for connection");
+                AsteroidsOperator.logger.log(FINE, "[ClientConnector] Waiting for connection");
                 ClientHandler clientHandler = new ClientHandler(serverSocket.accept(), operator);
                 Thread clientHandlerThread = new Thread(clientHandler);
                 clientHandlerThread.start();
@@ -59,12 +59,12 @@ public class ClientConnector extends Thread {
     }
 
     public void stopRunning() {
-        AsteroidsOperator.logger.log(INFO, "[ClientConnector] Stop running");
+        AsteroidsOperator.logger.log(FINE, "[ClientConnector] Stop running");
         running = false;
     }
     
     public void disconnect() {
-        AsteroidsOperator.logger.log(INFO, "[ClientConnector] Close");
+        AsteroidsOperator.logger.log(FINE, "[ClientConnector] Close");
         try {
             serverSocket.close();
         } catch (IOException ex) {

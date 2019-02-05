@@ -1,22 +1,9 @@
 package operator.network;
 
 import asteroidsoperator.AsteroidsOperator;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.Socket;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
-import server.network.basic.Address;
 import operator.ClientHandler;
-import operator.Operator;
 import server.network.packets.ClientPacket;
-import server.network.packets.ClientStatePacket;
-import server.network.packets.Packet;
-import server.network.packets.ServerPacket;
-import static server.ClientState.LOGIN;
-import static server.ClientState.LOGOUT;
 import server.network.basic.InputHandler;
 
 /**
@@ -48,11 +35,11 @@ public class ClientInputHandler extends Thread {
                 clientData.setAddressConnectionServer(clientPacket.getClientAddress());
             }
         }
-        AsteroidsOperator.logger.log(INFO, "[ClientInputHandler] End of run function");
+        AsteroidsOperator.logger.log(FINE, "[ClientInputHandler] End of run function");
     }
     
     public void stopRunning() {
-        AsteroidsOperator.logger.log(INFO, "[ClientInputHandler] Stop running");
+        AsteroidsOperator.logger.log(FINE, "[ClientInputHandler] Stop running");
         running = false;
     }
 

@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import server.network.basic.Address;
 import java.util.Observable;
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import server.ClientState;
@@ -35,7 +36,7 @@ public class ClientHandler implements Runnable {
     private ClientState state;
 
     public ClientHandler(Socket socket, Operator operator) {
-        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Create");
+        AsteroidsOperator.logger.log(FINE, "[ClientHandler] Create");
         this.operator = operator;
         this.socket = socket;
         initialize();
@@ -43,26 +44,25 @@ public class ClientHandler implements Runnable {
     
     private void initialize() {
         state = LOGIN;
+        output = new ClientOutputHandler(this);
+        input = new ClientInputHandler(this);
         
         try {
             socket.setTcpNoDelay(true);
-            socket.setSoTimeout(40);
+            //socket.setSoTimeout(40);
         } catch (SocketException ex) {
             AsteroidsOperator.logger.log(SEVERE, "[ClientHandler] Failed to set socket settings");
         }
-        
-        output = new ClientOutputHandler(this);
-        input = new ClientInputHandler(this);
     }
     
     @Override
     public void run() {
-        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Start");
+        AsteroidsOperator.logger.log(FINE, "[ClientHandler] Start");
         login();
     }
     
     public void login() {
-        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Login");
+        AsteroidsOperator.logger.log(FINE, "[ClientHandler] Login");
         addToOperator();
         addToServer(operator.getServer());
         sendServerPacket();
@@ -70,8 +70,7 @@ public class ClientHandler implements Runnable {
     }
 
     public void logout() {
-        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Logout");
-        setState(LOGOUT);
+        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Logout {0}", addressConnectionServer);
         stopReceivingPackets();
         disconnect();
         removeFromServer();
@@ -100,7 +99,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void disconnect() {
-        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Close");
+        AsteroidsOperator.logger.log(FINE, "[ClientHandler] Close");
         try {
             socket.close();
         } catch (IOException ex) {
@@ -138,7 +137,7 @@ public class ClientHandler implements Runnable {
     }
 
     public void setServerHandler(ServerHandler serverHandler) {
-        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Set ServerHandler to: {0}", serverHandler.getAddressForClient());
+        AsteroidsOperator.logger.log(FINE, "[ClientHandler] Set ServerHandler to: {0}", serverHandler.getAddressForClient());
         this.serverHandler = serverHandler;
     }
 
@@ -151,7 +150,7 @@ public class ClientHandler implements Runnable {
     }
 
     public void setState(ClientState state) {
-        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Change ClientState to: {0}", state);
+        AsteroidsOperator.logger.log(FINE, "[ClientHandler] Change ClientState to: {0}", state);
         this.state = state;
         if (state == LOGOUT) {
             logout();

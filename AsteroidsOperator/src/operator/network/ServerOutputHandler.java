@@ -9,6 +9,7 @@ import asteroidsoperator.AsteroidsOperator;
 import operator.Operator;
 import operator.ServerHandler;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import server.network.basic.OutputHandler;
 import server.network.packets.MarkShutdownPacket;
 import server.network.packets.ServerPacket;
@@ -36,6 +37,7 @@ public class ServerOutputHandler extends Thread {
     }
     
     public void sendShutdownPacket() {
+        AsteroidsOperator.logger.log(FINE, "[ServerOutputHandler] Send shutdown packet");
         output.send(new ShutdownPacket());
     }
     
