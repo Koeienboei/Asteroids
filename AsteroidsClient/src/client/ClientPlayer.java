@@ -1,10 +1,12 @@
 package client;
 
+import static client.ClientState.CLOSE;
 import static client.ClientState.LOGOUT;
 import server.network.basic.Address;
 import static client.ClientState.PLAYING;
 import controller.MainFrame;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import model.Spaceship;
 import server.network.packets.InitPacket;
 import server.network.packets.ServerPacket;
@@ -72,6 +74,16 @@ public class ClientPlayer extends Client {
         setState(LOGOUT);
         game.stopRunning();
         serverConnector.logout();
+    }
+    
+    @Override
+    public void close() {
+        logger.log(INFO, "[Client] Close");
+        stopRunning();
+        serverConnector.logout();
+        operatorConnector.disconnect();
+        setState(CLOSE);
+        System.exit(0);
     }
     
     public Game getGame() {

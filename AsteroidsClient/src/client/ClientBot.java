@@ -1,14 +1,15 @@
 package client;
 
 import asteroidsclient.AsteroidsClient;
-import server.network.basic.Address;
 import static client.ClientState.CLOSE;
+import server.network.basic.Address;
 import static client.ClientState.GET_SERVER;
 import static client.ClientState.LOGIN;
 import static client.ClientState.LOGOUT;
 import static client.ClientState.PLAYING;
 import controller.MainFrame;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import model.Spaceship;
 import server.network.packets.InitPacket;
 import server.network.packets.ServerPacket;
@@ -57,4 +58,13 @@ public class ClientBot extends Client {
         }
         serverConnector.logout();
     }
+    
+    @Override
+    public void close() {
+        logger.log(INFO, "[Client] Close");
+        stopRunning();
+        serverConnector.logout();
+        operatorConnector.disconnect();
+        setState(CLOSE);
+    }    
 }

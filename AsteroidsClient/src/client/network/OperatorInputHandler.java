@@ -8,8 +8,7 @@ package client.network;
 import client.Client;
 import client.network.basic.InputHandler;
 import java.net.Socket;
-import static java.util.logging.Level.FINE;
-import java.util.logging.Logger;
+import static java.util.logging.Level.INFO;
 import server.network.packets.ServerPacket;
 
 /**
@@ -22,13 +21,13 @@ public class OperatorInputHandler {
     private InputHandler input;
 
     public OperatorInputHandler(Socket socket, Client client) {
-        client.logger.log(FINE, "[OperatorInputHandler] Create");
+        client.logger.log(INFO, "[OperatorInputHandler] Create");
         this.client = client;
         this.input = new InputHandler(socket, client);
     }
 
     public ServerPacket getServer() {
-        client.logger.log(FINE, "[OperatorInputHandler] Get server");
+        client.logger.log(INFO, "[OperatorInputHandler] Get server");
         Object packet = null;
         do {
             packet = input.receive();

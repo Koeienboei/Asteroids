@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import server.network.basic.Address;
 import server.network.packets.Packet;
@@ -24,27 +25,29 @@ public class OperatorConnector extends Thread {
     private OperatorOutputHandler output;    
 
     public OperatorConnector(Client client, Address operatorAddress) {
-        client.logger.log(FINE, "[OperatorConnector] Create");
+        client.logger.log(INFO, "[OperatorConnector] Create");
         this.client = client;
         this.socket = null;
         this.operatorAddress = operatorAddress;
     }
 
     public void connect() {
-        client.logger.log(FINE, "[OperatorConnector] Login to Operator");
+        client.logger.log(INFO, "[OperatorConnector] Connect");
         try {
-            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort(), InetAddress.getLocalHost(), 8951);
+            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort(), InetAddress.getLocalHost(), 0);
+            
+            output = new OperatorOutputHandler(socket, client);
+            input = new OperatorInputHandler(socket, client);
+            
             socket.setTcpNoDelay(true);
-            socket.setSoTimeout(40);
+            //socket.setSoTimeout(40);
         } catch (IOException ex) {
             client.logger.log(SEVERE, "[OperatorConnector] Failed to set up connection with Operator");
         }
-        output = new OperatorOutputHandler(socket, client);
-        input = new OperatorInputHandler(socket, client);
     }
 
     public void disconnect() {
-        client.logger.log(FINE, "[OperatorConnector] Close");
+        client.logger.log(INFO, "[OperatorConnector] Disconnect");
         try {
             socket.close();
         } catch (IOException ex) {

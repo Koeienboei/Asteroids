@@ -1,20 +1,14 @@
 package client.network;
 
-import asteroidsclient.AsteroidsClient;
 import client.Client;
-import static client.ClientState.CLOSE;
 import client.network.basic.OutputHandler;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
+import static java.util.logging.Level.INFO;
 import model.updates.ControllerUpdate;
 import server.network.packets.LogoutPacket;
-import server.network.packets.Packet;
 import server.network.packets.UpdatePacket;
 
 /**
@@ -28,12 +22,13 @@ public class ServerOutputHandler extends Thread implements Observer {
     private OutputHandler output;
 
     public ServerOutputHandler(Client client, Socket socket) {
-        client.logger.log(FINE, "[ServerOutputHandler] Create");
+        client.logger.log(INFO, "[ServerOutputHandler] Create");
         this.client = client;
         this.output = new OutputHandler(socket, client);
     }
     
     public void sendLogoutPacket() {
+        client.logger.log(FINE, "[ServerOutputHandler] Send LogoutPacket");
         output.send(new LogoutPacket());
     }
     
@@ -44,6 +39,7 @@ public class ServerOutputHandler extends Thread implements Observer {
     }
     
     public void stopRunning() {
+        client.logger.log(INFO, "[ServerOutputHandler] Stop running");
         client.getSpaceship().getSpaceshipController().deleteObservers();
     }
 }

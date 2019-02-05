@@ -48,7 +48,7 @@ public class InputHandler {
         } catch (SocketTimeoutException ex) {
             logger.log(FINE, "[InputHandler] Socket timeout");
         } catch (IOException | ClassNotFoundException ex) {
-            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet");
+            logger.log(Level.FINE, "[InputHandler] Failed to receive packet");
         }
         return null;
     }

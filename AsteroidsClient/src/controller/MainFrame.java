@@ -15,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -97,7 +98,7 @@ public class MainFrame extends JFrame {
         @Override
         public void windowClosing(WindowEvent e) {
             if (client != null) {
-                client.logger.log(FINE, "[MainFrame] Window closing");
+                client.logger.log(INFO, "[MainFrame] Window closing");
                 client.getServerConnector().sendLogoutPacket();
             }
         }

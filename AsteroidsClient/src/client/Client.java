@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.logging.FileHandler;
 import static java.util.logging.Level.ALL;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.OFF;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import model.Spaceship;
@@ -41,7 +43,7 @@ public abstract class Client extends Thread {
 
     public Client(Address operatorAddress) {
         initializeLogger();
-        logger.log(FINE, "[Client] Create");
+        logger.log(INFO, "[Client] Create");
         operatorConnector = new OperatorConnector(this, operatorAddress);
         serverConnector = new ServerConnector(this);
         running = false;
@@ -51,18 +53,18 @@ public abstract class Client extends Thread {
         loggerId = System.currentTimeMillis();
         logger = Logger.getLogger("Client[" + loggerId + "]Logs");
         try {
-            loggerFileHandler = new FileHandler("C:\\Users\\tomei\\Dropbox\\Bachelor project\\Version 2.4\\Client[" + loggerId + "]Logs.log");
+            loggerFileHandler = new FileHandler("Client[" + loggerId + "]Logs.log");
             logger.addHandler(loggerFileHandler);
             SimpleFormatter formatter = new SimpleFormatter();
             loggerFileHandler.setFormatter(formatter);
         } catch (SecurityException | IOException e) {
         }
-        logger.setLevel(ALL);
+        logger.setLevel(INFO);
     }
 
     @Override
     public void run() {
-        logger.log(FINE, "[Client] Start");
+        logger.log(INFO, "[Client] Start");
         running = true;
         setState(CONNECT);
         operatorConnector.connect();
@@ -73,7 +75,6 @@ public abstract class Client extends Thread {
                 setState(LOGOUT);
                 serverConnector.logout();
             }
-            setState(INITIALIZE);
             initialize(serverPacket);
             setState(LOGIN);
             serverConnector.login();
@@ -83,19 +84,13 @@ public abstract class Client extends Thread {
     }
 
     public void stopRunning() {
+        logger.log(INFO, "[Client] Stop running");
         running = false;
     }
     
     public abstract void logoutServer();
 
-    public void close() {
-        logger.log(FINE, "[Client] Close");
-        setState(CLOSE);
-        this.stopRunning();
-        serverConnector.logout();
-        operatorConnector.disconnect();
-        System.exit(0);
-    }
+    public abstract void close();
 
     public abstract void initialize(ServerPacket serverPacket);
 
@@ -108,7 +103,7 @@ public abstract class Client extends Thread {
     }
 
     public void setState(ClientState clientState) {
-        logger.log(FINE, "[Client] Change state to: {0}", clientState);
+        logger.log(INFO, "[Client] Change state to: {0}", clientState);
         this.clientState = clientState;
     }
 
