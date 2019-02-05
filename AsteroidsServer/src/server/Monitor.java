@@ -6,7 +6,6 @@
 package server;
 
 import asteroidsserver.AsteroidsServer;
-import static java.lang.Math.max;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Observable;
@@ -21,15 +20,13 @@ import server.network.OperatorConnector;
  */
 public class Monitor extends Thread implements Observer {
     
-    private OperatorConnector operatorConnector;
+    private final OperatorConnector operatorConnector;
     
-    private Game game;
-    private LinkedList<ClientHandler> clients;
+    private final Game game;
+    private final LinkedList<ClientHandler> clients;
     
-    private LinkedList<Long> responseTimeGame;
-    private LinkedList<Long> responseTimeClients;
-    private double utilization;
-    private double processingRate;
+    private final LinkedList<Long> responseTimeGame;
+    private final LinkedList<Long> responseTimeClients;
     
     private volatile boolean running;
     
@@ -39,8 +36,6 @@ public class Monitor extends Thread implements Observer {
         
         this.game = game;
         this.clients = new LinkedList<>();
-        
-        game.addObserver(this);
         
         responseTimeGame = new LinkedList<>();
         responseTimeClients = new LinkedList<>();
@@ -52,12 +47,12 @@ public class Monitor extends Thread implements Observer {
     public void update(Observable o, Object o1) {
         AsteroidsServer.logger.log(FINE, "[Monitor] Update");
         if (game.hasChanged()) {
-            responseTimeGame.add(max(0, game.getCalculationTime() - 40));
+            responseTimeGame.add(game.getCalculationTime());
         }
         if (o1 instanceof ClientHandler) {
             ClientHandler clientHandler = (ClientHandler) o1;
             if (clientHandler.getOutput().hasChanged()) {
-                responseTimeClients.add(max(0, clientHandler.getOutput().getCalculationTime() - 40));
+                responseTimeClients.add(clientHandler.getOutput().getCalculationTime());
             }
         }
     }
@@ -68,8 +63,10 @@ public class Monitor extends Thread implements Observer {
         clientHandler.getOutput().addObserver(this);
     }
     
-    public void removeClient() {
+    public void removeClient(ClientHandler clientHandler) {
         AsteroidsServer.logger.log(FINE, "[Monitor] Remove Client");
+        clients.remove(clientHandler);
+        clientHandler.getOutput().deleteObserver(this);
     }
     
     @Override
@@ -93,41 +90,36 @@ public class Monitor extends Thread implements Observer {
         responseTimeClients.clear();
     }
     
-    public double getResponseTimeGame() {
-        if (responseTimeGame.isEmpty()) {
-            return 0;
-        }
-        
-        double total = 0;
+    public double getResponseTime() {
+        return getResponseTimeGame();
+    }
+    private double getResponseTimeGame() {
+        double total = 0.0;
         Iterator<Long> it = responseTimeGame.iterator();
         while (it.hasNext()) {
             total += it.next();
         }
-        return total / responseTimeGame.size();
+        return responseTimeGame.isEmpty() ? total : total/responseTimeGame.size();
     }
 
-    public double getResponseTimeClients() {
-        if (responseTimeClients.isEmpty()) {
-            return 0;
-        }
-        
-        double total = 0;
+    private double getResponseTimeClients() {
+        double max = 0;
+        double next;
         Iterator<Long> it = responseTimeClients.iterator();
         while (it.hasNext()) {
-            total += it.next();
+            next = it.next();
+            if (max < next) {
+                max = next;
+            }
         }
-        return total / responseTimeClients.size();
+        return max;
     }
 
     public double getUtilization() {
-        return  ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage();
+        return ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage();
     }
 
-    public double getProcessingRate() {
-        if (clients.isEmpty()) {
-            return 0;
-        }
-        
+    public double getThroughput() {        
         double total = 0;
         Iterator<ClientHandler> it = clients.iterator();
         while (it.hasNext()) {

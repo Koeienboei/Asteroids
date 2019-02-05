@@ -33,7 +33,7 @@ public class UpdateQueue extends Observable {
     private int slotSize;
     private int length;
     
-    private int arivals;
+    private int amountProcessed;
     
     public UpdateQueue(ClientHandler clientHandler, AsteroidsModel model) {
         AsteroidsServer.logger.log(FINE, "Create UpdateQueue");
@@ -43,7 +43,7 @@ public class UpdateQueue extends Observable {
         this.length = 500;
         this.slotSize = 100;
         this.currentSlotNumber = 0;
-        this.arivals = 0;
+        this.amountProcessed = 0;
         
         queue = new LinkedList<LinkedList<Update>>();
         for (int i=0; i<length; i++) {
@@ -64,6 +64,7 @@ public class UpdateQueue extends Observable {
                 this.repeat(update);
             }
             it.remove();
+            amountProcessed++;
         }
         
         currentSlotNumber = (currentSlotNumber+1) % length;
@@ -82,7 +83,6 @@ public class UpdateQueue extends Observable {
         int minimalStepsTillInRange = clientHandler.getSpaceship().getMinimalStepsTillInRange(update.getGameObject());
         int slotNumber = min(minimalStepsTillInRange + 1, length-1);
         queue.get((slotNumber+currentSlotNumber) % length).add(update);
-        arivals++;
     }
     
     public synchronized void repeat(Update update) {
@@ -91,7 +91,6 @@ public class UpdateQueue extends Observable {
         int slotNumber = min(minimalStepsTillInRange + 1, length-1);
         slotNumber = max(slotNumber, update.getUpdateSpeed());
         queue.get((slotNumber+currentSlotNumber) % length).add(update);
-        arivals++;
     }
     
     public synchronized void remove(int id) {
@@ -136,8 +135,8 @@ public class UpdateQueue extends Observable {
     }
     
     public double getAmountProcessed() {
-        double amount = size() - arivals;
-        arivals = 0;
-        return amount;
+        double tmp = amountProcessed;
+        amountProcessed = 0;
+        return tmp;
     }
 }

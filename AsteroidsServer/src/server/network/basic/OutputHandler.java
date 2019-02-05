@@ -22,15 +22,15 @@ public class OutputHandler {
     private ObjectOutputStream output;
 
     public OutputHandler(Socket socket) {
-        logger.log(Level.INFO, "[OutputHandler] Create with socket {0} {1}", new Object[] {socket == null, socket.getLocalPort()});
+        logger.log(Level.FINE, "[OutputHandler] Create with socket {0} {1}", new Object[] {socket == null, socket.getLocalPort()});
         try {
             output = new ObjectOutputStream(socket.getOutputStream());
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, "[OutputHandler] Failed to create ObjectOutputStream");
+            logger.log(Level.SEVERE, "[OutputHandler] Failed to create ObjectOutputStream {0}", ex.getMessage());
         }
     }
 
-    public void send(Packet packet) {
+    public synchronized void send(Packet packet) {
         logger.log(Level.FINE, "[OutputHandler] Send packet: {0}", packet);
         boolean sent = false;
         int timesTried = 0;

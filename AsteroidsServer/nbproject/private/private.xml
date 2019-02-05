@@ -35,10 +35,8 @@
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/Spaceship.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/network/OperatorConnector.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/Bullet.java</file>
-            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/event/ChangeEvent.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/network/basic/InputHandler.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/model/MediumAsteroid.java</file>
-            <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/event/ChangeListener.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/network/ClientInputHandler.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/ClientState.java</file>
             <file>file:/C:/Users/tomei/Dropbox/Bachelor%20project/Version%202.4/AsteroidsServer/src/server/network/packets/ShutdownPacket.java</file>

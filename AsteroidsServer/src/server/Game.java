@@ -10,7 +10,7 @@ import static java.lang.Math.max;
 import java.util.Iterator;
 import java.util.Observable;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import model.Asteroid;
 import model.AsteroidsModel;
@@ -41,7 +41,7 @@ public class Game extends Observable implements Runnable {
     private volatile boolean running;
 
     public Game(Server server, int height, int width, int minAmountAsteroids) {
-        AsteroidsServer.logger.log(INFO, "[Game] Create");
+        AsteroidsServer.logger.log(FINE, "[Game] Create");
         this.server = server;
         this.model = new AsteroidsModel(height, width);
         this.gameObjectIdCounter = 0;
@@ -52,7 +52,7 @@ public class Game extends Observable implements Runnable {
 
     @Override
     public void run() {
-        AsteroidsServer.logger.log(INFO, "[Game] Start");
+        AsteroidsServer.logger.log(FINE, "[Game] Start");
         running = true;
         long time;
 
@@ -61,6 +61,8 @@ public class Game extends Observable implements Runnable {
             nextStep();
             try {
                 calculationTime = System.currentTimeMillis() - time;
+                setChanged();
+                notifyObservers();
                 Thread.sleep(max(0, 40 - calculationTime));
             } catch (InterruptedException ex) {
                 AsteroidsServer.logger.log(SEVERE, "Failed to wait after next step in Game");
@@ -71,7 +73,7 @@ public class Game extends Observable implements Runnable {
     }
 
     private void nextStep() {
-        AsteroidsServer.logger.log(INFO, "[Game] Next step in Game");
+        AsteroidsServer.logger.log(FINE, "[Game] Next step in Game");
         this.spawnNewAsteroids();
         this.giveNewObjectsIds();
         this.updateClientQueues();
@@ -138,11 +140,11 @@ public class Game extends Observable implements Runnable {
     }
 
     public void updateClientQueues(Update update) {
-        AsteroidsServer.logger.log(INFO, "[Game] Update ClientQueues with one Update #c{0}", server.getClients().size());
+        AsteroidsServer.logger.log(FINE, "[Game] Update ClientQueues with one Update #c{0}", server.getClients().size());
         Iterator<ClientHandler> itc = server.getClients().iterator();
         while (itc.hasNext()) {
             ClientHandler clientHandler = itc.next();
-            if (clientHandler.getState() == ALIVE || clientHandler.getState() == DEAD) {
+            if (clientHandler.getClientState() == ALIVE || clientHandler.getClientState() == DEAD) {
                 if (update instanceof ControllerUpdate) {
                     ControllerUpdate controllerUpdate = (ControllerUpdate) update;
                     if (controllerUpdate.getObjectId() != clientHandler.getSpaceship().getId()) {
@@ -167,7 +169,7 @@ public class Game extends Observable implements Runnable {
     }
 
     public void stopRunning() {
-        AsteroidsServer.logger.log(INFO, "[Game] Stop running");
+        AsteroidsServer.logger.log(FINE, "[Game] Stop running");
         running = false;
     }
     

@@ -6,6 +6,7 @@
 package server.network.packets;
 
 import asteroidsserver.AsteroidsServer;
+import java.io.Serializable;
 import static java.util.logging.Level.FINE;
 import server.Monitor;
 
@@ -13,40 +14,54 @@ import server.Monitor;
  *
  * @author tomei
  */
-public class MonitorPacket extends Packet {
+public class MonitorPacket extends Packet implements Serializable {
     
-    private double responseTimeGame;
-    private double responseTimeClients;
+    static final long serialVersionUID = 104904873L;
+    
+    private double responseTime;
     private double utilization;
-    private double processingRate;
+    private double throughput;
     
     public MonitorPacket(Monitor monitor) {
         AsteroidsServer.logger.log(FINE, "Create MonitorPacket");
-        this.responseTimeGame = monitor.getResponseTimeGame();
-        this.responseTimeClients = monitor.getResponseTimeClients();
+        this.responseTime = monitor.getResponseTime();
         this.utilization = monitor.getUtilization();
-        this.processingRate = monitor.getProcessingRate();
+        this.throughput = monitor.getThroughput();
+    }
+    
+    public MonitorPacket(double R, double X, double U) {
+        this.responseTime = R;
+        this.throughput = X;
+        this.utilization = U;
     }
 
-    public double getResponseTimeGame() {
-        return responseTimeGame;
+    public void setResponseTime(double responseTime) {
+        this.responseTime = responseTime;
     }
 
-    public double getResponseTimeClients() {
-        return responseTimeClients;
+    public void setUtilization(double utilization) {
+        this.utilization = utilization;
+    }
+
+    public void setThroughput(double throughput) {
+        this.throughput = throughput;
+    }
+    
+    public double getResponseTime() {
+        return responseTime;
     }
 
     public double getUtilization() {
         return utilization;
     }
 
-    public double getProcessingRate() {
-        return processingRate;
+    public double getThroughput() {
+        return throughput;
     }
     
     @Override
     public String toString() {
-        return "MonitorPacket(" + responseTimeGame + ", " + responseTimeClients + ", " + utilization + ", " + processingRate + ")";
+        return "MonitorPacket(" + responseTime + ", " + utilization + ", " + throughput + ")";
     }
    
 }

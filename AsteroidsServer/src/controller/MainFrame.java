@@ -9,7 +9,7 @@ import asteroidsserver.AsteroidsServer;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.FINE;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import server.Server;
@@ -30,7 +30,7 @@ public class MainFrame extends JFrame {
     private ServerPanel serverPanel;
 
     public MainFrame() {
-        AsteroidsServer.logger.log(INFO, "[MainFrame] Create");
+        AsteroidsServer.logger.log(FINE, "[MainFrame] Create");
         
         initGUI();
         
@@ -39,7 +39,7 @@ public class MainFrame extends JFrame {
         
         // Maak het venster zichtbaar
         this.setVisible(true);
-        AsteroidsServer.logger.log(INFO, "[MainFrame] Done with mainframe");
+        AsteroidsServer.logger.log(FINE, "[MainFrame] Done with mainframe");
     }
 
     /**
@@ -48,7 +48,7 @@ public class MainFrame extends JFrame {
     private void initGUI() {
         AsteroidsServer.logger.log(FINE, "[MainFrame] Initialize MainFrame GUI");
         this.setTitle("Asteroids Server");
-        this.setSize(800, 800);
+        this.setSize(300, 300);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
 
@@ -63,7 +63,7 @@ public class MainFrame extends JFrame {
 
         @Override
         public void windowClosing(WindowEvent e) {
-            AsteroidsServer.logger.log(INFO, "[MainFrame] Window Closing");
+            AsteroidsServer.logger.log(FINE, "[MainFrame] Window Closing");
             if (server != null) {
                 server.getOperatorConnector().sendShutdownPacket();
             }
@@ -92,7 +92,7 @@ public class MainFrame extends JFrame {
     }
 
     public void setServer(Server server) {
-        AsteroidsServer.logger.log(INFO, "[MainFrame] Set server");
+        AsteroidsServer.logger.log(FINE, "[MainFrame] Set server");
         this.server = server;
         serverPanel.setServer(server);
     }

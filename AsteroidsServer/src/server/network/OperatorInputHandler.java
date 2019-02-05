@@ -7,7 +7,7 @@ package server.network;
 
 import asteroidsserver.AsteroidsServer;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.FINE;
 import server.Server;
 import server.network.basic.InputHandler;
 import server.network.packets.MarkShutdownPacket;
@@ -26,7 +26,7 @@ public class OperatorInputHandler extends Thread {
     private volatile boolean running;
     
     public OperatorInputHandler(OperatorConnector operatorConnector, Server server) {
-        AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Create");
+        AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Create");
         this.server = server;
         this.operatorConnector = operatorConnector;
         this.input = new InputHandler(operatorConnector.getSocket());
@@ -35,25 +35,25 @@ public class OperatorInputHandler extends Thread {
     
     @Override
     public void run() {
-        AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Start");
+        AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Start");
         running = true;
         while (running) {
-            AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Receive packet");
+            AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Receive packet");
             Packet packet = input.receive();
             if (packet instanceof MarkShutdownPacket) {
-                AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Mark for shutdown packet received");
+                AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Mark for shutdown packet received");
                 server.markShutdown();
             }
             if (packet instanceof ShutdownPacket) {
-                AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Shutdown packet received");
+                AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Shutdown packet received");
                 server.shutdown();
             }
         }
-        AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] End of run function");
+        AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] End of run function");
     }
     
     public void stopRunning() {
-        AsteroidsServer.logger.log(INFO, "[OperatorInputHandler] Stop running");
+        AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Stop running");
         running = false;
     }
     

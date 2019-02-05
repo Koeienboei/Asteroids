@@ -6,12 +6,7 @@
 package server.network;
 
 import asteroidsserver.AsteroidsServer;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
 import server.ClientHandler;
 import server.network.packets.LogoutPacket;
 import server.network.packets.Packet;
@@ -33,7 +28,7 @@ public class ClientInputHandler extends Thread {
     private volatile boolean running;
 
     public ClientInputHandler(ClientHandler clientHandler, Server server) {
-        AsteroidsServer.logger.log(INFO, "Create ClientInputHandler");
+        AsteroidsServer.logger.log(FINE, "Create ClientInputHandler");
         this.server = server;
         this.clientHandler = clientHandler;
 
@@ -43,10 +38,10 @@ public class ClientInputHandler extends Thread {
     }
 
     private void update() {
-        AsteroidsServer.logger.log(INFO, "Start receiving updates from Client");
+        AsteroidsServer.logger.log(FINE, "Start receiving updates from Client");
         while (running) {
             Packet packet = input.receive();
-            if (packet instanceof UpdatePacket && clientHandler.getState() == ALIVE) {
+            if (packet instanceof UpdatePacket && clientHandler.getClientState() == ALIVE) {
                 UpdatePacket updatePacket = (UpdatePacket) packet;
                 server.getGame().getModel().addUpdate(updatePacket.getUpdate());
                 server.getGame().updateClientQueues(updatePacket.getUpdate());
@@ -59,14 +54,14 @@ public class ClientInputHandler extends Thread {
 
     @Override
     public void run() {
-        AsteroidsServer.logger.log(INFO, "Start ClientInputHandler");
+        AsteroidsServer.logger.log(FINE, "Start ClientInputHandler");
         running = true;
         update();
-        AsteroidsServer.logger.log(INFO, "[ClientInputHandler] End of run function");
+        AsteroidsServer.logger.log(FINE, "[ClientInputHandler] End of run function");
     }
     
     public void stopRunning() {
-        AsteroidsServer.logger.log(INFO, "[ClientInputHandler] Stop running");
+        AsteroidsServer.logger.log(FINE, "[ClientInputHandler] Stop running");
         running = false;
     }
 

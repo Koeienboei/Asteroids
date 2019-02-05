@@ -25,9 +25,9 @@ public class ClientStatePacket extends Packet implements Serializable {
     private ClientState clientState;
     
     public ClientStatePacket(ClientHandler clientHandler) {
-        AsteroidsServer.logger.log(FINE, "Create ClientStatePacket: {0}, {1}", new Object[]{clientHandler.getAddress(), clientHandler.getState()});
+        AsteroidsServer.logger.log(FINE, "Create ClientStatePacket: {0}, {1}", new Object[]{clientHandler.getAddress(), clientHandler.getClientState()});
         this.clientAddress = clientHandler.getAddress();
-        this.clientState = clientHandler.getState();
+        this.clientState = clientHandler.getClientState();
     }
 
     public Address getClientAddress() {

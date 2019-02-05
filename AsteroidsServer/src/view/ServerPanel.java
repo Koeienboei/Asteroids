@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -32,7 +33,7 @@ public class ServerPanel extends JPanel implements Observer {
     private ConcurrentLinkedQueue<ClientHandler> clients;
     
     public ServerPanel() {
-        AsteroidsServer.logger.log(INFO, "[ServerPanel] Create");
+        AsteroidsServer.logger.log(FINE, "[ServerPanel] Create");
         this.clients = new ConcurrentLinkedQueue<>();
         initGUI();
     }
@@ -67,25 +68,25 @@ public class ServerPanel extends JPanel implements Observer {
     }
 
     public void addClient(ClientHandler clientHandler) {
-        AsteroidsServer.logger.log(INFO, "[ServerPanel] Add client");
+        AsteroidsServer.logger.log(FINE, "[ServerPanel] Add client");
         clients.add(clientHandler);
     }
     
     public void removeClient(ClientHandler clientHandler) {
-        AsteroidsServer.logger.log(INFO, "[ServerPanel] Remove client");
+        AsteroidsServer.logger.log(FINE, "[ServerPanel] Remove client");
         clients.remove(clientHandler);
     }
     
     @Override
     public void update(Observable o, Object arg) {
-        AsteroidsServer.logger.log(INFO, "[ServerPanel] Observed update");
+        AsteroidsServer.logger.log(FINE, "[ServerPanel] Observed update");
         displayServerInformation();
         displayClientInformation();
-        AsteroidsServer.logger.log(INFO, "[ServerPanel] End of observed update");
+        AsteroidsServer.logger.log(FINE, "[ServerPanel] End of observed update");
     }
     
     public void setServer(Server server) {
-        AsteroidsServer.logger.log(INFO, "[ServerPanel] Set server");
+        AsteroidsServer.logger.log(FINE, "[ServerPanel] Set server");
         this.server = server;
         server.addObserver(this);
         displayServerInformation();

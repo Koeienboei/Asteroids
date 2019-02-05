@@ -29,7 +29,7 @@ public class InputHandler {
         try {
             input = new ObjectInputStream(socket.getInputStream());
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, "[InputHandler] Failed to create ObjectInputStream");
+            logger.log(Level.SEVERE, "[InputHandler] Failed to create ObjectInputStream {0}", ex.getMessage());
         }
     }
 
@@ -45,7 +45,11 @@ public class InputHandler {
         } catch (SocketTimeoutException ex) {
             logger.log(FINE, "[InputHandler] Socket timeout");
         } catch (IOException | ClassNotFoundException ex) {
-            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet");
+            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet {0}", ex.getMessage());
+        } catch (ClassCastException ex) {
+            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet {0} {1}", new Object[] {ex.getMessage(), ex.toString()});
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet {0}", ex.getMessage());
         }
         return null;
     }

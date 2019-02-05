@@ -15,6 +15,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import server.Server;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
@@ -35,13 +36,13 @@ public class OperatorConnector {
     private OperatorOutputHandler output;
     
     public OperatorConnector(Address operatorAddress, Server server) {
-        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Create");
+        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Create");
         this.server = server;
         this.operatorAddress = operatorAddress;
     }
     
     public void start() {
-        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Login");
+        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Login");
         connect();
         sendServerPacket();
         startSendingPackets();
@@ -53,50 +54,54 @@ public class OperatorConnector {
     }
     
     public void sendShutdownPacket() {
-        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Send ShutdownPacket");
+        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Send ShutdownPacket");
         output.sendShutdownPacket();
     }    
     
     public void stopRunning() {
-        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Logout");
+        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Logout");
         stopReceivingPackets();
         stopSendingPackets();
     }
     
     private void connect() {
         AsteroidsServer.logger.log(INFO, "[OperatorConnector] Connect");
+        System.out.println("Connect to operator (" + operatorAddress + ")");
         try {
-            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort(), InetAddress.getLocalHost(), 8901);
-            socket.setSoTimeout(40);
+            socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort(), InetAddress.getLocalHost(), 0);
             output = new OperatorOutputHandler(this, server);
             input = new OperatorInputHandler(this, server);
+            socket.setTcpNoDelay(true);
+            //socket.setSoTimeout(40);
+            System.out.println("Connect to operator succes");
         } catch (IOException ex) {
+            System.out.println("Failed to connect to operator " + ex.getMessage());
             AsteroidsServer.logger.log(SEVERE, "[OperatorData] Failed to connect to Operator");
         }
     }
     
     private void startReceivingPackets() {
-        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Start receiving packets");
+        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Start receiving packets");
         input.start();
     }
     
     private void stopReceivingPackets() {
-        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Stop receiving packets");
+        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Stop receiving packets");
         input.stopRunning();
     }
     
     private void startSendingPackets() {
-        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Start sending packets");
+        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Start sending packets");
         output.start();
     }
     
     private void stopSendingPackets() {
-        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Stop sending packets");
+        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Stop sending packets");
         output.stopRunning();
     }
     
     public void disconnect() {
-        AsteroidsServer.logger.log(INFO, "[OperatorData] Disconnect");
+        AsteroidsServer.logger.log(FINE, "[OperatorData] Disconnect");
         try {
             socket.close();
         } catch (IOException ex) {
@@ -116,4 +121,8 @@ public class OperatorConnector {
         return output;
     }
 
+    public Address getAddress() {
+        return new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort());
+    }
+    
 }

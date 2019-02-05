@@ -9,7 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import server.ClientHandler;
  import server.Server;
@@ -27,13 +27,12 @@ public class ClientConnector extends Thread {
     private volatile boolean running;
 
     public ClientConnector(Server server) {
-        AsteroidsServer.logger.log(INFO, "[ClientConnector] Create");
+        AsteroidsServer.logger.log(FINE, "[ClientConnector] Create");
         this.server = server;
         
         try {
-            serverSocket = new ServerSocket(8900, 100, InetAddress.getLocalHost());
+            serverSocket = new ServerSocket(0, 100, InetAddress.getLocalHost());
             serverSocket.setSoTimeout(40);
-            //serverSocket.bind(new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), 0));
         } catch (IOException ex) {
             AsteroidsServer.logger.log(SEVERE, "[ClientConnector] Failed to create ServerSocket");
         }
@@ -43,17 +42,17 @@ public class ClientConnector extends Thread {
     
     @Override
     public void run() {
-        AsteroidsServer.logger.log(INFO, "[ClientConnector] Start with ServerSocket at {0}", getAddress());
+        AsteroidsServer.logger.log(FINE, "[ClientConnector] Start with ServerSocket at {0}", getAddress());
         this.running = true;
         while (running) {
             try {
-                AsteroidsServer.logger.log(INFO, "[ClientConnector] Waiting for incomming connection");
+                AsteroidsServer.logger.log(FINE, "[ClientConnector] Waiting for incomming connection");
                 Socket socket = serverSocket.accept();
-                AsteroidsServer.logger.log(INFO, "[ClientConnector] Accepted s{0} to c{1}", new Object[]{new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort()), new Address(socket.getInetAddress().getHostAddress(), socket.getPort())});
+                AsteroidsServer.logger.log(FINE, "[ClientConnector] Accepted s{0} to c{1}", new Object[]{new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort()), new Address(socket.getInetAddress().getHostAddress(), socket.getPort())});
                 //String s = "string";
-                //AsteroidsServer.logger.log(INFO, "[ClientConnector] After random string creation");
+                //AsteroidsServer.logger.log(FINE, "[ClientConnector] After random string creation");
                 //ClientHandler randomClient = new ClientHandler(null, null);
-                //AsteroidsServer.logger.log(INFO, "[ClientConnector] After random clientHandler creation");
+                //AsteroidsServer.logger.log(FINE, "[ClientConnector] After random clientHandler creation");
                 ClientHandler clientHandler = new ClientHandler(socket, server);
                 Thread clientHandlerThread = new Thread(clientHandler);
                 clientHandlerThread.start();
@@ -66,12 +65,12 @@ public class ClientConnector extends Thread {
     }
 
     public void stopRunning() {
-        AsteroidsServer.logger.log(INFO, "[ClientConnector] Stop running");
+        AsteroidsServer.logger.log(FINE, "[ClientConnector] Stop running");
         running = false;
     }
     
     public void disconnect() {
-        AsteroidsServer.logger.log(INFO, "[ClientConnector] Close");
+        AsteroidsServer.logger.log(FINE, "[ClientConnector] Close");
         try {
             serverSocket.close();
         } catch (IOException ex) {

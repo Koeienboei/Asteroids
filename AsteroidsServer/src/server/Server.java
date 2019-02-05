@@ -12,7 +12,7 @@ import java.util.Observer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static server.ClientState.ALIVE;
 import static server.ClientState.DEAD;
@@ -30,39 +30,45 @@ public class Server extends Observable implements Observer {
 
     private OperatorConnector operatorConnector;
 
-    private MainFrame mainFrame;
     private Game game;
 
+    private Monitor monitor;
+    
     private boolean markedShutdown;
 
-    public Server(MainFrame mainFrame, int height, int width, Address operatorAddress) {
-        AsteroidsServer.logger.log(INFO, "[Server] Create");
-        this.mainFrame = mainFrame;
+    public Server(int height, int width, Address operatorAddress) {
+        AsteroidsServer.logger.log(FINE, "[Server] Create");
         initialize(height, width, operatorAddress);
     }
 
     private void initialize(int height, int width, Address operatorAddress) {
         AsteroidsServer.logger.log(FINE, "[Server] Initialize");
-        game = new Game(this, height, width, 256);
+        game = new Game(this, height, width, 32);
 
         clients = new ConcurrentLinkedQueue<>();
         clientConnector = new ClientConnector(this);
 
         operatorConnector = new OperatorConnector(operatorAddress, this);
+        
+        monitor = new Monitor(operatorConnector, game);
+        game.addObserver(monitor);
 
         markedShutdown = false;
     }
 
     public void start() {
-        AsteroidsServer.logger.log(INFO, "[Server] Start");
+        AsteroidsServer.logger.log(FINE, "[Server] Start");
         connectToOperator();
         startGame();
         startClientConnector();
+        monitor.start();
+        System.out.println("Address for clients: " + clientConnector.getAddress());
+        System.out.println("Address for operator: " + operatorConnector.getAddress());
     }
 
     public void shutdown() {
-        AsteroidsServer.logger.log(INFO, "[Server] Shutdown");
-        logoutClients();;
+        AsteroidsServer.logger.log(FINE, "[Server] Shutdown");
+        logoutClients();
         disconnectClientConnector();
         disconnectFromOperator();
         stopGame();
@@ -70,53 +76,53 @@ public class Server extends Observable implements Observer {
     }
 
     private void startGame() {
-        AsteroidsServer.logger.log(INFO, "[Server] Start game");
+        AsteroidsServer.logger.log(FINE, "[Server] Start game");
         Thread gameThread = new Thread(game);
         gameThread.start();
     }
 
     private void startClientConnector() {
-        AsteroidsServer.logger.log(INFO, "[Server] Start receiving logins");
+        AsteroidsServer.logger.log(FINE, "[Server] Start receiving logins");
         clientConnector.start();
     }
 
     private void disconnectClientConnector() {
-        AsteroidsServer.logger.log(INFO, "[Server] Disconnect client connector");
+        AsteroidsServer.logger.log(FINE, "[Server] Disconnect client connector");
         clientConnector.stopRunning();
         clientConnector.disconnect();
     }
 
     private void connectToOperator() {
-        AsteroidsServer.logger.log(INFO, "[Server] Login to operator");
+        AsteroidsServer.logger.log(FINE, "[Server] Login to operator");
         operatorConnector.start();
     }
 
     private void disconnectFromOperator() {
-        AsteroidsServer.logger.log(INFO, "[Server] Logout from operator");
+        AsteroidsServer.logger.log(FINE, "[Server] Logout from operator");
         operatorConnector.stopRunning();
         operatorConnector.disconnect();
     }
 
     private void stopGame() {
-        AsteroidsServer.logger.log(INFO, "[Server] Stop game");
+        AsteroidsServer.logger.log(FINE, "[Server] Stop game");
         game.stopRunning();
     }
 
     public void addClient(ClientHandler clientHandler) {
-        AsteroidsServer.logger.log(INFO, "[Server] Add Client");
+        AsteroidsServer.logger.log(FINE, "[Server] Add Client");
         clients.add(clientHandler);
         setChanged();
         notifyObservers(clientHandler);
     }
 
     public void removeClient(ClientHandler clientHandler) {
-        AsteroidsServer.logger.log(INFO, "[Server] Remove Client");
+        AsteroidsServer.logger.log(FINE, "[Server] Remove Client");
         clients.remove(clientHandler);
         setChanged();
         notifyObservers();
 
         if (isMarkedShutdown() && isEmpty()) {
-            AsteroidsServer.logger.log(INFO, "[Server] Is marked shutdown and empty");
+            AsteroidsServer.logger.log(FINE, "[Server] Is marked shutdown and empty");
             operatorConnector.sendShutdownPacket();
         }
     }
@@ -135,7 +141,7 @@ public class Server extends Observable implements Observer {
     }
 
     public void logoutClients() {
-        AsteroidsServer.logger.log(INFO, "[Server] Logout clients");
+        AsteroidsServer.logger.log(FINE, "[Server] Logout clients");
         Iterator<ClientHandler> it = clients.iterator();
         while (it.hasNext()) {
             it.next().logout();
@@ -174,24 +180,24 @@ public class Server extends Observable implements Observer {
         return game;
     }
 
-    public MainFrame getMainFrame() {
-        return mainFrame;
+    public Monitor getMonitor() {
+        return monitor;
     }
 
     @Override
     public void update(Observable o, Object o1) {
-        AsteroidsServer.logger.log(INFO, "[Server] Observed update");
+        AsteroidsServer.logger.log(FINE, "[Server] Observed update");
         if (o instanceof ClientHandler) {
             ClientHandler clientHandler = (ClientHandler) o;
-            if (clientHandler.getState() == ALIVE) {
+            if (clientHandler.getClientState() == ALIVE) {
                 game.updateClientQueues(clientHandler.getSpaceship().getUpdate());
-            } else if (clientHandler.getState() == DEAD) {
+            } else if (clientHandler.getClientState() == DEAD) {
                 game.updateClientQueues(clientHandler.getSpaceship().getUpdate());
             }
             setChanged();
-            AsteroidsServer.logger.log(INFO, "[Server] Before notify observers ({0})", countObservers());
+            AsteroidsServer.logger.log(FINE, "[Server] Before notify observers ({0})", countObservers());
             notifyObservers(clientHandler);
-            AsteroidsServer.logger.log(INFO, "[Server] End of observed update");
+            AsteroidsServer.logger.log(FINE, "[Server] End of observed update");
         }
     }
 

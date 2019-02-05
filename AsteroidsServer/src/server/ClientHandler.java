@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import server.network.basic.Address;
 import java.util.Observable;
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import model.Spaceship;
@@ -27,7 +28,7 @@ import static server.ClientState.LOGOUT;
 public class ClientHandler extends Observable implements Runnable {
 
     private Spaceship spaceship;
-    private ClientState state;
+    private ClientState clientState;
 
     private Socket socket;
     private ClientInputHandler input;
@@ -38,15 +39,15 @@ public class ClientHandler extends Observable implements Runnable {
     private Server server;
 
     public ClientHandler(Socket socket, Server server) {
-        //AsteroidsServer.logger.log(INFO, "[ClientHandler] Create with address s{0} to c{1}", new Object[]{new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort()), new Address(socket.getInetAddress().getHostAddress(), socket.getPort())});
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Create with address s{0} to c{1}", new Object[]{new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort()), new Address(socket.getInetAddress().getHostAddress(), socket.getPort())});
         this.socket = socket;
         this.server = server;
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Before initialize");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Before initialize");
         this.initialize();
     }
     
     private void initialize() {
-        state = INITIALIZE;
+        clientState = INITIALIZE;
         
         try {
             socket.setTcpNoDelay(true);
@@ -59,82 +60,84 @@ public class ClientHandler extends Observable implements Runnable {
         input = new ClientInputHandler(this, server);
         
         updateQueue = new UpdateQueue(this, server.getGame().getModel());
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Initialized");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Initialized");
     }
 
     @Override
     public void run() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Start");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Start");
         login();
     }
 
     public void login() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Login");
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Login {0}", getAddress());
+        System.out.println("Client logs in: " + getAddress());
         addToServer();
-        addToPanel();
         sendInitPacket();
         addToGame();
         sendSpaceship();
         initializeUpdateQueue();
+        addToMonitor();
         startSendingUpdates();
         startReceivingPackets();
     }
     
     public void logout() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Logout");
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Logout {0}", getAddress());
+        System.out.println("Client logs out: " + getAddress());
         setState(LOGOUT);
         sendLogoutPacket();
         stopSendingUpdates();
         stopReceivingPackets();
         disconnect();
+        removeFromMonitor();
         removeFromGame();
-        removeFromPanel();
         removeFromServer();
     }
 
     private void sendInitPacket() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Send InitPacket");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Send InitPacket");
         output.sendInitPacket();
     }
 
     private void sendSpaceship() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Send Spaceship");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Send Spaceship");
         output.sendSpaceship();
     }
 
     private void sendLogoutPacket() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Send Logout");
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Send Logout {0}", getAddress());
         output.sendLogoutPacket();
     }
 
     private void initializeUpdateQueue() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Init UpdateQueue");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Init UpdateQueue");
         updateQueue.initialize();
     }
 
     private void startSendingUpdates() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Start sending updates");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Start sending updates");
         Thread outputThread = new Thread(output);
         outputThread.start();
     }
 
     private void stopSendingUpdates() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Stop sending updates");
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Stop sending updates {0}", getAddress());
         output.stopRunning();
     }
 
     private void startReceivingPackets() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Start receiving packets");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Start receiving packets");
         input.start();
     }
 
     private void stopReceivingPackets() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Stop receiving packets");
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Stop receiving packets {0}", getAddress());
         input.stopRunning();
     }
 
     private void disconnect() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Disconnect");
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Disconnect {0}", getAddress());
         try {
             socket.close();
         } catch (IOException ex) {
@@ -143,35 +146,33 @@ public class ClientHandler extends Observable implements Runnable {
     }
 
     private void addToGame() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Add to game");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Add to game");
         server.getGame().spawnNewSpacehipForClient(this);
     }
 
     private void removeFromGame() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Remove from game");
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] Remove from game {0}", getAddress());
         spaceship.destroy();
     }
 
-    private void addToPanel() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Add to panel");
-        server.getMainFrame().getServerPanel().addClient(this);
-    }
-
-    private void removeFromPanel() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Remove from panel");
-        server.getMainFrame().getServerPanel().removeClient(this);
-    }
-
     private void addToServer() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Add to server");
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Add to server");
         server.addClient(this);
         addObserver(server);
     }
 
     private void removeFromServer() {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] remove from server");
+        AsteroidsServer.logger.log(INFO, "[ClientHandler] remove from server {0}", getAddress());
         server.removeClient(this);
         deleteObserver(server);
+    }
+    
+    private void addToMonitor() {
+        server.getMonitor().addClient(this);
+    }
+    
+    private void removeFromMonitor() {
+        server.getMonitor().removeClient(this);
     }
 
     public Address getAddress() {
@@ -194,16 +195,16 @@ public class ClientHandler extends Observable implements Runnable {
         return output;
     }
 
-    public ClientState getState() {
-        return state;
+    public ClientState getClientState() {
+        return clientState;
     }
 
-    public void setState(ClientState state) {
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] Set ClientState to: {0}", state);
-        this.state = state;
+    public void setState(ClientState clientState) {
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] Set ClientState to: {0}", clientState);
+        this.clientState = clientState;
         setChanged();
         notifyObservers();
-        AsteroidsServer.logger.log(INFO, "[ClientHandler] End of set ClientState to: {0}", state);
+        AsteroidsServer.logger.log(FINE, "[ClientHandler] End of set ClientState to: {0}", clientState);
     }
 
     public Socket getSocket() {
@@ -216,7 +217,7 @@ public class ClientHandler extends Observable implements Runnable {
 
     @Override
     public String toString() {
-        return socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + " " + state;
+        return socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + " " + clientState;
     }
 
 }

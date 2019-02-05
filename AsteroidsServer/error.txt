@@ -1,0 +1,66 @@
+Feb 05, 2019 5:48:12 PM server.network.OperatorConnector connect
+INFO: [OperatorConnector] Connect
+Feb 05, 2019 5:48:13 PM server.network.OperatorOutputHandler sendServerPacket
+INFO: [OperatorOutputHandler] Send ServerPacket
+Feb 05, 2019 5:48:29 PM server.ClientHandler <init>
+INFO: [ClientHandler] Create with address s127.0.1.1:45087 to c127.0.1.1:34969
+Feb 05, 2019 5:48:29 PM server.ClientHandler login
+INFO: [ClientHandler] Login 127.0.1.1:34969
+Feb 05, 2019 5:48:30 PM server.ClientHandler <init>
+INFO: [ClientHandler] Create with address s127.0.1.1:45087 to c127.0.1.1:33465
+Feb 05, 2019 5:48:30 PM server.ClientHandler login
+INFO: [ClientHandler] Login 127.0.1.1:33465
+Feb 05, 2019 5:48:31 PM server.ClientHandler <init>
+INFO: [ClientHandler] Create with address s127.0.1.1:45087 to c127.0.1.1:47771
+Feb 05, 2019 5:48:31 PM server.ClientHandler login
+INFO: [ClientHandler] Login 127.0.1.1:47771
+Feb 05, 2019 5:48:39 PM server.ClientHandler logout
+INFO: [ClientHandler] Logout 127.0.1.1:34969
+Feb 05, 2019 5:48:39 PM server.network.OperatorOutputHandler update
+INFO: [OperatorOutputHandler] Sending ClientStatePacket(127.0.1.1:34969, LOGOUT)
+Feb 05, 2019 5:48:39 PM server.ClientHandler sendLogoutPacket
+INFO: [ClientHandler] Send Logout 127.0.1.1:34969
+Feb 05, 2019 5:48:39 PM server.ClientHandler stopSendingUpdates
+INFO: [ClientHandler] Stop sending updates 127.0.1.1:34969
+Feb 05, 2019 5:48:39 PM server.ClientHandler stopReceivingPackets
+INFO: [ClientHandler] Stop receiving packets 127.0.1.1:34969
+Feb 05, 2019 5:48:39 PM server.ClientHandler disconnect
+INFO: [ClientHandler] Disconnect 127.0.1.1:34969
+Feb 05, 2019 5:48:39 PM server.ClientHandler removeFromGame
+INFO: [ClientHandler] Remove from game 127.0.1.1:34969
+Feb 05, 2019 5:48:40 PM server.ClientHandler removeFromServer
+INFO: [ClientHandler] remove from server 127.0.1.1:34969
+Feb 05, 2019 5:48:40 PM server.ClientHandler logout
+INFO: [ClientHandler] Logout 127.0.1.1:33465
+Feb 05, 2019 5:48:40 PM server.network.OperatorOutputHandler update
+INFO: [OperatorOutputHandler] Sending ClientStatePacket(127.0.1.1:33465, LOGOUT)
+Feb 05, 2019 5:48:40 PM server.ClientHandler sendLogoutPacket
+INFO: [ClientHandler] Send Logout 127.0.1.1:33465
+Feb 05, 2019 5:48:40 PM server.ClientHandler stopSendingUpdates
+INFO: [ClientHandler] Stop sending updates 127.0.1.1:33465
+Feb 05, 2019 5:48:40 PM server.ClientHandler stopReceivingPackets
+INFO: [ClientHandler] Stop receiving packets 127.0.1.1:33465
+Feb 05, 2019 5:48:40 PM server.ClientHandler disconnect
+INFO: [ClientHandler] Disconnect 127.0.1.1:33465
+Feb 05, 2019 5:48:40 PM server.ClientHandler removeFromGame
+INFO: [ClientHandler] Remove from game 127.0.1.1:33465
+Feb 05, 2019 5:48:40 PM server.ClientHandler removeFromServer
+INFO: [ClientHandler] remove from server 127.0.1.1:33465
+Feb 05, 2019 5:48:40 PM server.ClientHandler logout
+INFO: [ClientHandler] Logout 127.0.1.1:47771
+Feb 05, 2019 5:48:40 PM server.network.OperatorOutputHandler update
+INFO: [OperatorOutputHandler] Sending ClientStatePacket(127.0.1.1:47771, LOGOUT)
+Feb 05, 2019 5:48:40 PM server.ClientHandler sendLogoutPacket
+INFO: [ClientHandler] Send Logout 127.0.1.1:47771
+Feb 05, 2019 5:48:40 PM server.ClientHandler stopSendingUpdates
+INFO: [ClientHandler] Stop sending updates 127.0.1.1:47771
+Feb 05, 2019 5:48:40 PM server.ClientHandler stopReceivingPackets
+INFO: [ClientHandler] Stop receiving packets 127.0.1.1:47771
+Feb 05, 2019 5:48:41 PM server.ClientHandler disconnect
+INFO: [ClientHandler] Disconnect 127.0.1.1:47771
+Feb 05, 2019 5:48:41 PM server.ClientHandler removeFromGame
+INFO: [ClientHandler] Remove from game 127.0.1.1:47771
+Feb 05, 2019 5:48:41 PM server.ClientHandler removeFromServer
+INFO: [ClientHandler] remove from server 127.0.1.1:47771
+Feb 05, 2019 5:48:50 PM server.network.ClientConnector run
+SEVERE: [ClientConnector] Failed to connect to Client

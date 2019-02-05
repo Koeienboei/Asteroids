@@ -17,7 +17,7 @@ import static java.util.logging.Level.FINE;
  */
 public class ClientPacket extends Packet implements Serializable {
     
-    static final long serialVersionUID = 2L;
+    static final long serialVersionUID = 2020202L;
     
     private Address clientAddress;
     
