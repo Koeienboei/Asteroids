@@ -37,7 +37,22 @@ public class AsteroidsOperator {
         }
         logger.setLevel(Level.INFO);
         
-        Operator operator = new Operator();
+        int rLow, rHigh, rMax, W, reconfigurationSpeed;
+        try {
+            rLow = Integer.parseInt(args[0]);
+            rHigh = Integer.parseInt(args[1]);
+            rMax = Integer.parseInt(args[2]);
+            W = Integer.parseInt(args[3]);
+            reconfigurationSpeed = Integer.parseInt(args[4]);
+        } catch (Exception ex) {
+            rLow = 1;
+            rHigh = 5;
+            rMax = 10;
+            W = 3;
+            reconfigurationSpeed = 10;
+        }
+        
+        Operator operator = new Operator(rLow, rHigh, rMax, W, reconfigurationSpeed);
         MainFrame mainFrame = new MainFrame(operator);
         operator.start();
     }

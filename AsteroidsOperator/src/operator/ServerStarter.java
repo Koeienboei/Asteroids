@@ -24,7 +24,7 @@ import server.network.basic.Address;
  */
 public class ServerStarter extends Thread {
     
-    private static final boolean useDocker = false;
+    private static final boolean useDocker = true;
     
     public ServerStarter() {
         AsteroidsOperator.logger.log(FINE, "[ServerStarter] Create");
@@ -32,9 +32,9 @@ public class ServerStarter extends Thread {
     
     private String[] getCommand() {
         if (useDocker) {
-            return new String[] {"docker", "run", /*"-it", "--rm",*/ "--net=host", "-P", "server:latest"};
+            return new String[] {"docker", "run", /*"-it",*/ "--rm", "--net=host", "-P", "server:latest"};
         } else {
-            return new String[] {"java", "-jar", "lib/AsteroidsServer.jar", "1600", "1600", "127.0.1.1", "8851"};
+            return new String[] {"java", "-jar", "lib/AsteroidsServer.jar", "3200", "3200", "32", "127.0.1.1", "8851"};
         }
     }
     

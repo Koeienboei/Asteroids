@@ -10,6 +10,7 @@ import operator.ClientHandler;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import server.network.basic.OutputHandler;
+import server.network.packets.LogoutPacket;
 import server.network.packets.ServerPacket;
 
 /**
@@ -34,5 +35,9 @@ public class ClientOutputHandler {
             AsteroidsOperator.logger.log(SEVERE, "Failed sending ServerPacket to client, no server data");
         }
     }    
+
+    public void sendLogoutPacket() {
+        output.send(new LogoutPacket());
+    }
     
 }

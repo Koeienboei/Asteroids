@@ -20,28 +20,29 @@ import server.network.packets.MonitorPacket;
 public class Monitor extends Thread {
 
     private Operator operator;
-    private Planner planner;
 
     private int rLow;
     private int rHigh;
     private int rMax;
     private int W;
+    private int reconfigurationSpeed;
     
     private volatile boolean running;
 
-    public Monitor(Operator operator, int rLow, int rHigh, int rMax, int W) {
+    public Monitor(Operator operator, int rLow, int rHigh, int rMax, int W, int reconfigurationSpeed) {
         AsteroidsOperator.logger.log(FINE, "[Monitor] Create");
         this.operator = operator;
         this.rLow = rLow;
         this.rHigh = rHigh;
         this.rMax = rMax;
         this.W = W;
+        this.reconfigurationSpeed = reconfigurationSpeed;
         this.running = false;
     }
 
     @Override
     public synchronized void run() {
-        AsteroidsOperator.logger.log(FINE, "[Monitor] Start");
+        AsteroidsOperator.logger.log(INFO, "[Monitor] Start");
         MonitorPacket average;
         double R, X, U;
         running = true;
@@ -52,12 +53,14 @@ public class Monitor extends Thread {
             X = average.getThroughput();
             U = average.getUtilization();
             if (R > rHigh) {
-                //planner.acquire(R, X, U);
+                AsteroidsOperator.logger.log(INFO, "[Monitor] Acquire");
+                operator.getPlanner().acquire();
             } else if (R < rLow) {
-                //planner.release(R, X, U);
+                AsteroidsOperator.logger.log(INFO, "[Monitor] Release");
+                operator.getPlanner().release();
             }
             try {
-                this.wait(1000);
+                this.wait(reconfigurationSpeed * 1000);
             } catch (InterruptedException ex) {
                 
             }

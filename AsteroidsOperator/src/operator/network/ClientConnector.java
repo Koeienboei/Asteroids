@@ -59,12 +59,12 @@ public class ClientConnector extends Thread {
     }
 
     public void stopRunning() {
-        AsteroidsOperator.logger.log(FINE, "[ClientConnector] Stop running");
+        AsteroidsOperator.logger.log(INFO, "[ClientConnector] Stop running");
         running = false;
     }
     
     public void disconnect() {
-        AsteroidsOperator.logger.log(FINE, "[ClientConnector] Close");
+        AsteroidsOperator.logger.log(INFO, "[ClientConnector] Close");
         try {
             serverSocket.close();
         } catch (IOException ex) {

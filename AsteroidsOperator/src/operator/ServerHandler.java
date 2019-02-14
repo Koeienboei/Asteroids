@@ -18,6 +18,7 @@ import server.network.basic.Address;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
@@ -41,7 +42,7 @@ public class ServerHandler extends Observable implements Runnable {
     private ServerInputHandler input;
     private ServerOutputHandler output;
 
-    private LinkedList<ClientHandler> clients;
+    private ConcurrentLinkedQueue<ClientHandler> clients;
 
     private int height;
     private int width;
@@ -69,7 +70,7 @@ public class ServerHandler extends Observable implements Runnable {
             AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to set socket settings");
         }
         
-        clients = new LinkedList<>();
+        clients = new ConcurrentLinkedQueue<>();
         monitorPacketList = new MonitorPacketList(operator.getMonitor().getW());
         try {
             monitorFileWriter = new BufferedWriter(new FileWriter(socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + " monitor.txt", true));
@@ -101,8 +102,15 @@ public class ServerHandler extends Observable implements Runnable {
     }
     
     public void shutdown() {
-        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Shutdown");
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Shutdown {0}", addressForClient);
         sendShutdownPacket();
+        /*while (!clients.isEmpty()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to wait for server to shutdown");
+            }
+        }*/
         stopReceivingPackets();
         disconnect();
         removeFromPanel();
@@ -147,7 +155,7 @@ public class ServerHandler extends Observable implements Runnable {
     }
     
     public void disconnect() {
-        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Disconnect");
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Disconnect {0}", addressForClient);
         try {
             socket.close();
         } catch (IOException ex) {
@@ -190,25 +198,42 @@ public class ServerHandler extends Observable implements Runnable {
     }
 
     public void addClient(ClientHandler clientData) {
-        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Add Client: {0}", clientData.getAddressConnectionServer());
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Server {0} added Client: {1}", new Object[] {addressForClient, clientData.getAddressConnectionServer()});
         clients.add(clientData);
         setChanged();
         notifyObservers();
     }
 
     public void removeClient(ClientHandler clientData) {
-        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Remove Client: {0}", clientData.getAddressConnectionServer());
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Server {0} removed Client: {1}", new Object[] {addressForClient, clientData.getAddressConnectionServer()});
         clients.remove(clientData);
         setChanged();
         notifyObservers();
+        if (markedShutdown && clients.isEmpty()) {
+            shutdown();
+        }
     }
 
     public void markShutdown() {
+        if (clients.isEmpty()) {
+            shutdown();
+        }
         markedShutdown = true;
     }
     
     public boolean isMarkedShutdown() {
         return markedShutdown;
+    }
+    
+    public boolean isAboveAverage() {
+        return getUtility() > operator.getAverageUtilization();
+    }
+    
+    public boolean isRunning() {
+        if (input == null || addressForClient == null) {
+            return false;
+        }
+        return input.isRunning();
     }
 
     public int getHeight() {
@@ -225,6 +250,6 @@ public class ServerHandler extends Observable implements Runnable {
 
     @Override
     public String toString() {
-        return addressForClient + "[" + clients.size() + "]";
+        return addressForClient + "  [" + clients.size() + "]" + (markedShutdown ? "Shutting down ..." : "");
     }
 }

@@ -45,7 +45,7 @@ public class Operator extends Observable implements Observer {
 
     private boolean markedShutdown;
 
-    public Operator() {
+    public Operator(int rLow, int rHigh, int rMax, int W, int reconfigurationSpeed) {
         AsteroidsOperator.logger.log(FINE, "[Operator] Create");
         clientConnector = new ClientConnector(this);
         serverConnector = new ServerConnector(this);
@@ -57,7 +57,7 @@ public class Operator extends Observable implements Observer {
         serverGameWidth = 1600;
         serverPortCounter = 8900;
 
-        monitor = new Monitor(this, 4, 48, 64, 5);
+        monitor = new Monitor(this, rLow, rHigh, rMax, W, reconfigurationSpeed);
         planner = new Planner(this);
 
         markedShutdown = false;
@@ -65,6 +65,7 @@ public class Operator extends Observable implements Observer {
 
     public synchronized void start() {
         AsteroidsOperator.logger.log(FINE, "[Operator] Start");
+        monitor.start();
         serverConnector.start();
         startServers(3);
         clientConnector.start();
@@ -78,7 +79,7 @@ public class Operator extends Observable implements Observer {
     }
 
     public void removeClient(ClientHandler clientHandler) {
-        AsteroidsOperator.logger.log(INFO, "[Operator] Remove Client: {0}", clientHandler.getAddressConnectionServer());
+        AsteroidsOperator.logger.log(FINE, "[Operator] Remove Client: {0}", clientHandler.getAddressConnectionServer());
         clients.remove(clientHandler);
         setChanged();
         notifyObservers();
@@ -120,7 +121,7 @@ public class Operator extends Observable implements Observer {
         Iterator<ServerHandler> it = servers.iterator();
         while (it.hasNext()) {
             ServerHandler serverData = it.next();
-            if (serverData.isMarkedShutdown()) {
+            if (!serverData.isRunning() || serverData.isMarkedShutdown()) {
                 continue;
             }
             if (lowestUtilityServer == null) {
@@ -161,7 +162,7 @@ public class Operator extends Observable implements Observer {
         }
         while (it.hasNext()) {
             ServerHandler serverData = it.next();
-            if (serverData.getUtility() < lowestUtilityServer.getUtility()) {
+            if (serverData.isRunning() && serverData.getUtility() < lowestUtilityServer.getUtility()) {
                 lowestUtilityServer = serverData;
             }
         }
@@ -177,9 +178,13 @@ public class Operator extends Observable implements Observer {
         clientConnector.disconnect();
         serverConnector.stopRunning();
         serverConnector.disconnect();
-        Iterator<ServerHandler> it = servers.iterator();
-        while (it.hasNext()) {
-            it.next().shutdown();
+        Iterator<ServerHandler> its = servers.iterator();
+        while (its.hasNext()) {
+            its.next().shutdown();
+        }
+        Iterator<ClientHandler> itc = clients.iterator();
+        while (itc.hasNext()) {
+            itc.next().logout();
         }
     }
 
@@ -218,6 +223,10 @@ public class Operator extends Observable implements Observer {
 
     public Monitor getMonitor() {
         return monitor;
+    }
+
+    public Planner getPlanner() {
+        return planner;
     }
 
     @Override

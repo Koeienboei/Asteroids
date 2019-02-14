@@ -72,8 +72,8 @@ public class ClientHandler implements Runnable {
     public void logout() {
         AsteroidsOperator.logger.log(INFO, "[ClientHandler] Logout {0}", addressConnectionServer);
         stopReceivingPackets();
+        output.sendLogoutPacket();
         disconnect();
-        removeFromServer();
         removeFromOperator();
     }
 
@@ -124,7 +124,7 @@ public class ClientHandler implements Runnable {
     }
 
     public void setAddressConnectionServer(Address addressConnectionServer) {
-        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Set Address of connection with Server to: {0}", addressConnectionServer);
+        AsteroidsOperator.logger.log(INFO, "[ClientHandler] Set address connection server from {0} to {1}", new Object[] {this.addressConnectionServer, addressConnectionServer});
         this.addressConnectionServer = addressConnectionServer;
     }
 
@@ -152,12 +152,6 @@ public class ClientHandler implements Runnable {
     public void setState(ClientState state) {
         AsteroidsOperator.logger.log(FINE, "[ClientHandler] Change ClientState to: {0}", state);
         this.state = state;
-        if (state == LOGOUT) {
-            logout();
-        }
-        if (serverHandler.isMarkedShutdown() && state == DEAD) {
-            login();
-        }
     }
 
     @Override
