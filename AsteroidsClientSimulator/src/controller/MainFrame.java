@@ -14,6 +14,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
@@ -64,45 +65,33 @@ public class MainFrame extends JFrame {
         this.addWindowListener(new Exit());
     }
 
-    private synchronized void spawnClients(int amount) {
+    private void spawnClients(int amount) {
         for (int i = 0; i < amount; i++) {
             spawnClient();
         }
     }
 
-    private synchronized void spawnClient() {
+    private void spawnClient() {
         Client client = new ClientBot(startPanel.getOperatorAddress());
         clients.add(client);
         client.start();
         try {
-            this.wait(100);
+            Thread.sleep(1000);
         } catch (InterruptedException ex) {
         }
     }
 
-    private synchronized void closeClients() {
+    private void closeClients() {
         Iterator<Client> it = clients.iterator();
         while (it.hasNext()) {
             Client client = it.next();
-            client.logger.log(FINE, "[MainFrame] Window closing");
-            client.getServerConnector().sendLogoutPacket();
-            try {
-                this.wait(200);
+            client.logger.log(INFO, "[MainFrame] Window closing");
+            client.close();
+            /*try {
+                Thread.sleep(200);
             } catch (InterruptedException ex) {
-            }
+            }*/
         }
-        
-        it = clients.iterator();
-        while (it.hasNext()) {
-            Client client = it.next();
-            while (client.getClientState() != CLOSE) {
-                try {
-                    this.wait(100);
-                } catch (InterruptedException ex) {
-                }
-            }
-        }
-        System.exit(0);
     }
 
     private void initActions() {
@@ -125,7 +114,7 @@ public class MainFrame extends JFrame {
         }
 
         @Override
-        public synchronized void windowClosing(WindowEvent e) {
+        public void windowClosing(WindowEvent e) {
             closeClients();
             System.exit(0);
         }
