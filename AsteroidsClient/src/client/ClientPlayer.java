@@ -36,7 +36,7 @@ public class ClientPlayer extends Client {
     }
   
     @Override
-    public void initialize(ServerPacket serverPacket) {
+    public void loginServer(ServerPacket serverPacket) {
         logger.log(FINE, "[ClientPlayer] Initialize with ServerPacket");
         serverConnector.setServerAddress(serverPacket.getServerAddress());
         
@@ -44,6 +44,8 @@ public class ClientPlayer extends Client {
         mainFrame.getGamePanel().setGame(game);
         Thread gameThread = new Thread(game);
         gameThread.start();
+        
+        serverConnector.login();
     }
     
     @Override
@@ -64,7 +66,7 @@ public class ClientPlayer extends Client {
 
     @Override
     public void update(UpdatePacket updatePacket) {
-        logger.log(FINE, "[ClientPlayer] Update with UpdatePacket");
+        logger.log(FINE, "[ClientPlayer] Update with {0}", updatePacket);
         game.getModel().addUpdates(updatePacket.getUpdates());
     }
     
@@ -79,10 +81,9 @@ public class ClientPlayer extends Client {
     @Override
     public void close() {
         logger.log(INFO, "[Client] Close");
-        stopRunning();
-        serverConnector.logout();
-        operatorConnector.disconnect();
         setState(CLOSE);
+        logoutServer();
+        operatorConnector.logout();
         System.exit(0);
     }
     

@@ -2,19 +2,12 @@ package client;
 
 import client.network.OperatorConnector;
 import server.network.basic.Address;
-import static client.ClientState.CLOSE;
 import static client.ClientState.CONNECT;
 import static client.ClientState.GET_SERVER;
-import static client.ClientState.INITIALIZE;
-import static client.ClientState.LOGIN;
-import static client.ClientState.LOGOUT;
 import client.network.ServerConnector;
 import java.io.IOException;
 import java.util.logging.FileHandler;
-import static java.util.logging.Level.ALL;
-import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.OFF;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import model.Spaceship;
@@ -35,18 +28,15 @@ public abstract class Client extends Thread {
 
     protected Spaceship spaceship;
     protected volatile ClientState clientState;
-    
+
     protected OperatorConnector operatorConnector;
     protected ServerConnector serverConnector;
-    
-    protected volatile boolean running;
 
     public Client(Address operatorAddress) {
         initializeLogger();
         logger.log(INFO, "[Client] Create");
         operatorConnector = new OperatorConnector(this, operatorAddress);
         serverConnector = new ServerConnector(this);
-        running = false;
     }
 
     private void initializeLogger() {
@@ -65,34 +55,14 @@ public abstract class Client extends Thread {
     @Override
     public void run() {
         logger.log(INFO, "[Client] Start");
-        running = true;
-        setState(CONNECT);
         operatorConnector.connect();
-        setState(GET_SERVER);
-        while(running) {
-            ServerPacket serverPacket = operatorConnector.getInput().getServer();
-            if (serverConnector.isLoggedIn()) {
-                setState(LOGOUT);
-                serverConnector.logout();
-            }
-            initialize(serverPacket);
-            setState(LOGIN);
-            serverConnector.login();
-            setState(INITIALIZE);
-            serverConnector.getInput().start();
-        }
     }
 
-    public void stopRunning() {
-        logger.log(INFO, "[Client] Stop running");
-        running = false;
-    }
-    
     public abstract void logoutServer();
 
     public abstract void close();
 
-    public abstract void initialize(ServerPacket serverPacket);
+    public abstract void loginServer(ServerPacket serverPacket);
 
     public abstract void initialize(InitPacket initPacket);
 

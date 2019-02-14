@@ -37,13 +37,17 @@ public class Game extends Observable implements Runnable {
         client.logger.log(FINE, "[Game] Start");
         running = true;
         long time;
+        long calculationTime;
         
         while (running) {
             time = System.currentTimeMillis();
             nextStep();
             try {
                 client.logger.log(FINE, "[Game] Wait for {0}", max(0,40 - (System.currentTimeMillis() - time)));
-                Thread.sleep(max(0,40 - (System.currentTimeMillis() - time)));
+                calculationTime = System.currentTimeMillis() - time;
+                if (40 - calculationTime > 0) {
+                    Thread.sleep(40 - calculationTime);
+                }
             } catch (InterruptedException ex) {
                 client.logger.log(SEVERE, "[Game] Failed to wait");
             }

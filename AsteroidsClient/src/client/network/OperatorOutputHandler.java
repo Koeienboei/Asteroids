@@ -11,6 +11,7 @@ import java.net.Socket;
 import static java.util.logging.Level.INFO;
 import server.network.basic.Address;
 import server.network.packets.ClientPacket;
+import server.network.packets.LogoutPacket;
 
 /**
  *
@@ -32,5 +33,9 @@ public class OperatorOutputHandler {
         client.logger.log(INFO, "[OperatorOutputHandler] Send {0}", clientPacket);
         output.send(clientPacket);
     }    
+    
+    public void sendLogoutPacket() {
+        output.send(new LogoutPacket());
+    }
     
 }

@@ -8,8 +8,10 @@ import static client.ClientState.LOGIN;
 import static client.ClientState.LOGOUT;
 import static client.ClientState.PLAYING;
 import controller.MainFrame;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
+import java.util.logging.Logger;
 import model.Spaceship;
 import server.network.packets.InitPacket;
 import server.network.packets.ServerPacket;
@@ -28,9 +30,10 @@ public class ClientBot extends Client {
     }
   
     @Override
-    public void initialize(ServerPacket serverPacket) {
+    public void loginServer(ServerPacket serverPacket) {
         logger.log(FINE, "[ClientBot] Initialize with ServerPacket");
         serverConnector.setServerAddress(serverPacket.getServerAddress());
+        serverConnector.login();
     }
     
     @Override
@@ -47,7 +50,9 @@ public class ClientBot extends Client {
     }
 
     @Override
-    public void update(UpdatePacket updatePacket) {}
+    public void update(UpdatePacket updatePacket) {
+        logger.log(FINE, "[ClientBot] Updating with {0}", updatePacket);
+    }
     
     @Override
     public void logoutServer() {
@@ -62,9 +67,8 @@ public class ClientBot extends Client {
     @Override
     public void close() {
         logger.log(INFO, "[Client] Close");
-        stopRunning();
-        serverConnector.logout();
-        operatorConnector.disconnect();
         setState(CLOSE);
+        logoutServer();
+        operatorConnector.logout();
     }    
 }

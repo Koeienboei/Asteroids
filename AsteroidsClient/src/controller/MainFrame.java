@@ -14,8 +14,11 @@ import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -99,7 +102,7 @@ public class MainFrame extends JFrame {
         public void windowClosing(WindowEvent e) {
             if (client != null) {
                 client.logger.log(INFO, "[MainFrame] Window closing");
-                client.getServerConnector().sendLogoutPacket();
+                client.close();
             }
         }
 

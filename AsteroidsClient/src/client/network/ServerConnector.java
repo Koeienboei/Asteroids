@@ -11,9 +11,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import server.network.basic.Address;
 import server.network.packets.ClientPacket;
 
@@ -38,44 +40,27 @@ public class ServerConnector {
         this.socket = null;
     }
 
-    private void initialize() {
-        client.logger.log(INFO, "[ServerConnector] Initialize");
-        
-        client.getOperatorConnector().getOutput().sendClientPacket(socket);
-
-        output = new ServerOutputHandler(client, socket);
-        input = new ServerInputHandler(client, socket);
-        
-        try {
-            socket.setTcpNoDelay(true);
-            //socket.setSoTimeout(40);
-        } catch (SocketException ex) {
-            client.logger.log(SEVERE, "[ServerConnector] Failed to set socket settings ({0})", ex.getMessage());
-        }
-    }
-
     public void login() {
         client.logger.log(INFO, "[ServerConnector] Login to Server");
         connect();
         initialize();
-    }
-
-    public void sendLogoutPacket() {
-        client.logger.log(INFO, "[ServerConnector] Send LogoutPacket {0}", new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort()));
-        output.sendLogoutPacket();
+        start();
     }
 
     public void logout() {
         client.logger.log(INFO, "[ServerConnector] Logout");
-        if (output != null) {
-            output.stopRunning();
+        if (isLoggedIn()) {
+            sendLogoutPacket();
+            while (isLoggedIn()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    client.logger.log(SEVERE, "[ServerConnector] Failed to wait for logging out of server");
+                }
+            }
         }
-        if (input != null) {
-            input.stopRunning();
-        }
-        disconnect();
     }
-
+    
     private void connect() {
         client.logger.log(INFO, "[ServerConnector] Connect");
         try {
@@ -87,11 +72,40 @@ public class ServerConnector {
         } catch (IOException ex) {
             client.logger.log(SEVERE, "[ServerConnector] Failed to set up connection with Server ({0})", ex.getMessage());
         }
-
     }
 
+    private void initialize() {
+        client.logger.log(INFO, "[ServerConnector] Initialize");
+
+        client.getOperatorConnector().getOutput().sendClientPacket(socket);
+
+        output = new ServerOutputHandler(client, socket);
+        input = new ServerInputHandler(client, socket);
+
+        try {
+            socket.setTcpNoDelay(true);
+        } catch (SocketException ex) {
+            client.logger.log(SEVERE, "[ServerConnector] Failed to set socket settings ({0})", ex.getMessage());
+        }
+    }
+
+    public void start() {
+        input.start();
+    }
+
+    public void sendLogoutPacket() {
+        client.logger.log(INFO, "[ServerConnector] Send LogoutPacket {0}", new Address(socket.getLocalAddress().getHostAddress(), socket.getLocalPort()));
+        output.sendLogoutPacket();
+    }
+    
     public void disconnect() {
         client.logger.log(INFO, "[ServerConnector] Disconnect");
+        if (output != null) {
+            output.stopRunning();
+        }
+        if (input != null) {
+            input.stopRunning();
+        }
         try {
             socket.close();
         } catch (IOException ex) {
@@ -109,7 +123,10 @@ public class ServerConnector {
     }
 
     public boolean isLoggedIn() {
-        return serverAddress != null;
+        if (input == null) {
+            return false;
+        }
+        return input.isRunning();
     }
 
     public ServerOutputHandler getOutput() {

@@ -128,7 +128,7 @@ public class SpaceshipController extends Observable implements KeyListener, Runn
         }
 
         try {
-            this.wait(waitTime);
+            Thread.sleep(waitTime);
         } catch (InterruptedException ex) {
         }
 

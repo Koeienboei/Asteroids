@@ -4,9 +4,11 @@ import client.Client;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import server.network.basic.Address;
 import server.network.packets.Packet;
 import server.network.packets.ServerPacket;
@@ -16,13 +18,13 @@ import server.network.packets.ServerPacket;
  *
  * @author Tom
  */
-public class OperatorConnector extends Thread {
+public class OperatorConnector {
 
     private Client client;
     private Socket socket;
     private Address operatorAddress;
     private OperatorInputHandler input;
-    private OperatorOutputHandler output;    
+    private OperatorOutputHandler output;
 
     public OperatorConnector(Client client, Address operatorAddress) {
         client.logger.log(INFO, "[OperatorConnector] Create");
@@ -35,19 +37,38 @@ public class OperatorConnector extends Thread {
         client.logger.log(INFO, "[OperatorConnector] Connect");
         try {
             socket = new Socket(operatorAddress.getIp(), operatorAddress.getPort(), InetAddress.getLocalHost(), 0);
-            
+
             output = new OperatorOutputHandler(socket, client);
             input = new OperatorInputHandler(socket, client);
-            
+
             socket.setTcpNoDelay(true);
-            //socket.setSoTimeout(40);
+            
+            input.start();
         } catch (IOException ex) {
             client.logger.log(SEVERE, "[OperatorConnector] Failed to set up connection with Operator");
         }
     }
 
+    public void logout() {
+        client.logger.log(INFO, "[OperatorConnector] Logout");
+        if (isLoggedIn()) {
+            output.sendLogoutPacket();
+            while (isLoggedIn()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    client.logger.log(SEVERE, "[OperatorConnector] Failed to wait for logging out of operator");
+                }
+            }
+        }
+        
+    }
+    
     public void disconnect() {
         client.logger.log(INFO, "[OperatorConnector] Disconnect");
+        if (input != null) {
+            input.stopRunning();
+        }
         try {
             socket.close();
         } catch (IOException ex) {
@@ -63,4 +84,11 @@ public class OperatorConnector extends Thread {
         return output;
     }
 
+    public void sendLogoutPacket() {
+        output.sendLogoutPacket();
+    }
+
+    public boolean isLoggedIn() {
+        return input.isRunning();
+    }
 }
