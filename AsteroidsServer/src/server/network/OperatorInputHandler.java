@@ -6,8 +6,12 @@
 package server.network;
 
 import asteroidsserver.AsteroidsServer;
+import java.io.IOException;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import server.Server;
 import server.network.basic.InputHandler;
 import server.network.packets.MarkShutdownPacket;
@@ -29,7 +33,11 @@ public class OperatorInputHandler extends Thread {
         AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Create");
         this.server = server;
         this.operatorConnector = operatorConnector;
-        this.input = new InputHandler(operatorConnector.getSocket());
+        try {
+            this.input = new InputHandler(operatorConnector.getSocket());
+        } catch (IOException ex) {
+            AsteroidsServer.logger.log(SEVERE, "[OperatorInputHandler] Failed to set up input stream {0}", ex.getMessage());
+        }
         this.running = false;
     }
     
@@ -39,7 +47,16 @@ public class OperatorInputHandler extends Thread {
         running = true;
         while (running) {
             AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Receive packet");
-            Packet packet = input.receive();
+            Packet packet = null;
+            try {
+                packet = input.receive();
+            } catch (IOException ex) {
+                AsteroidsServer.logger.log(SEVERE, "[OperatorInputHandler] IOException on receive {0}", ex.getMessage());
+            } catch (ClassNotFoundException ex) {
+                AsteroidsServer.logger.log(SEVERE, "[OperatorInputHandler] ClassNotFoundException on receive {0}", ex.getMessage());
+            } catch (ClassCastException ex) {
+                AsteroidsServer.logger.log(SEVERE, "[OperatorInputHandler] ClassCastException on receive {0}", ex.getMessage());
+            }
             if (packet instanceof MarkShutdownPacket) {
                 AsteroidsServer.logger.log(FINE, "[OperatorInputHandler] Mark for shutdown packet received");
                 server.markShutdown();

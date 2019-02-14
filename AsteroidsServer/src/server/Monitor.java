@@ -10,9 +10,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
+import com.sun.management.OperatingSystemMXBean;
 import java.lang.management.ManagementFactory;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
+import server.network.ClientOutputHandler;
 import server.network.OperatorConnector;
 /**
  *
@@ -23,10 +27,10 @@ public class Monitor extends Thread implements Observer {
     private final OperatorConnector operatorConnector;
     
     private final Game game;
-    private final LinkedList<ClientHandler> clients;
+    private final ConcurrentLinkedQueue<ClientHandler> clients;
     
-    private final LinkedList<Long> responseTimeGame;
-    private final LinkedList<Long> responseTimeClients;
+    private final ConcurrentLinkedQueue<Long> responseTimeGame;
+    private final ConcurrentLinkedQueue<Long> responseTimeClients;
     
     private volatile boolean running;
     
@@ -35,10 +39,10 @@ public class Monitor extends Thread implements Observer {
         this.operatorConnector = operatorConnector;
         
         this.game = game;
-        this.clients = new LinkedList<>();
+        this.clients = new ConcurrentLinkedQueue<>();
         
-        responseTimeGame = new LinkedList<>();
-        responseTimeClients = new LinkedList<>();
+        responseTimeGame = new ConcurrentLinkedQueue<>();
+        responseTimeClients = new ConcurrentLinkedQueue<>();
         
         running = false;
     }
@@ -46,14 +50,12 @@ public class Monitor extends Thread implements Observer {
     @Override
     public void update(Observable o, Object o1) {
         AsteroidsServer.logger.log(FINE, "[Monitor] Update");
-        if (game.hasChanged()) {
+        if (o instanceof Game) {
             responseTimeGame.add(game.getCalculationTime());
         }
-        if (o1 instanceof ClientHandler) {
-            ClientHandler clientHandler = (ClientHandler) o1;
-            if (clientHandler.getOutput().hasChanged()) {
-                responseTimeClients.add(clientHandler.getOutput().getCalculationTime());
-            }
+        if (o instanceof ClientOutputHandler) {
+            ClientOutputHandler clientOutputHandler = (ClientOutputHandler) o;
+            responseTimeClients.add(clientOutputHandler.getCalculationTime());
         }
     }
     
@@ -77,7 +79,7 @@ public class Monitor extends Thread implements Observer {
             operatorConnector.getOutput().sendMonitorPacket(this);
             reset();
             try {
-                wait(1000);
+                Thread.sleep(1000);
             } catch (InterruptedException ex) {
                 AsteroidsServer.logger.log(SEVERE, "[Monitor] Failed to wait");
             }
@@ -91,28 +93,34 @@ public class Monitor extends Thread implements Observer {
     }
     
     public double getResponseTime() {
-        return getResponseTimeGame();
+        double responseTimeGame = getResponseTimeGame();
+        double responseTimeClients = getResponseTimeClients();
+        return responseTimeGame > responseTimeClients ? responseTimeGame : responseTimeClients;
     }
     private double getResponseTimeGame() {
+        AsteroidsServer.logger.log(FINE, "[Monitor] Get response time game");
         double total = 0.0;
+        double responseTime;
         Iterator<Long> it = responseTimeGame.iterator();
         while (it.hasNext()) {
-            total += it.next();
+            responseTime = it.next();
+            AsteroidsServer.logger.log(FINE, "[Monitor] Response time game: {0}", responseTime);
+            total += responseTime;
         }
         return responseTimeGame.isEmpty() ? total : total/responseTimeGame.size();
     }
 
     private double getResponseTimeClients() {
-        double max = 0;
-        double next;
+        AsteroidsServer.logger.log(FINE, "[Monitor] Get response time game clients");
+        double total = 0.0;
+        double responseTime;
         Iterator<Long> it = responseTimeClients.iterator();
         while (it.hasNext()) {
-            next = it.next();
-            if (max < next) {
-                max = next;
-            }
+            responseTime = it.next();
+            AsteroidsServer.logger.log(FINE, "[Monitor] Response time client: {0}", responseTime);
+            total += responseTime;
         }
-        return max;
+        return responseTimeClients.isEmpty() ? total : total/responseTimeClients.size();
     }
 
     public double getUtilization() {

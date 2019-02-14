@@ -6,7 +6,11 @@
 package server.network;
 
 import asteroidsserver.AsteroidsServer;
+import java.io.IOException;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 import server.ClientHandler;
 import server.network.packets.LogoutPacket;
 import server.network.packets.Packet;
@@ -32,15 +36,28 @@ public class ClientInputHandler extends Thread {
         this.server = server;
         this.clientHandler = clientHandler;
 
-        input = new InputHandler(clientHandler.getSocket());
+        try {
+            input = new InputHandler(clientHandler.getSocket());
+        } catch (IOException ex) {
+            AsteroidsServer.logger.log(SEVERE, "[ClientInputHandler] Failed to set up input stream {0}", ex.getMessage());
+        }
         
         this.running = false;
     }
 
     private void update() {
-        AsteroidsServer.logger.log(FINE, "Start receiving updates from Client");
+        AsteroidsServer.logger.log(FINE, "[ClientInputHandler] Start receiving updates from Client");
         while (running) {
-            Packet packet = input.receive();
+            Packet packet = null;
+            try {
+                packet = input.receive();
+            } catch (IOException ex) {
+                AsteroidsServer.logger.log(SEVERE, "[ClientInputHandler] IOException on receive from {0}, {1}", new Object[] {clientHandler.getAddress(), ex.getMessage()});
+            } catch (ClassNotFoundException ex) {
+                AsteroidsServer.logger.log(SEVERE, "[ClientInputHandler] ClassNotFoundException on receive from {0}, {1}", new Object[] {clientHandler.getAddress(), ex.getMessage()});
+            } catch (ClassCastException ex) {
+                AsteroidsServer.logger.log(SEVERE, "[ClientInputHandler] ClassCastException on receive from {0}, {1}", new Object[] {clientHandler.getAddress(), ex.getMessage()});
+            }
             if (packet instanceof UpdatePacket && clientHandler.getClientState() == ALIVE) {
                 UpdatePacket updatePacket = (UpdatePacket) packet;
                 server.getGame().getModel().addUpdate(updatePacket.getUpdate());

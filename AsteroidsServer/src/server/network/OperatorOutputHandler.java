@@ -13,6 +13,8 @@ import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import server.network.packets.ClientStatePacket;
 import server.ClientHandler;
+import static server.ClientState.ALIVE;
+import static server.ClientState.DEAD;
 import static server.ClientState.LOGOUT;
 import server.Monitor;
 import server.Server;
@@ -61,10 +63,10 @@ public class OperatorOutputHandler implements Observer {
         AsteroidsServer.logger.log(FINE, "[OperatorOutputHandler] Observed update");
         if (o1 instanceof ClientHandler) {
             ClientStatePacket clientStatePacket = new ClientStatePacket((ClientHandler) o1);
-            if (clientStatePacket.getClientState() == LOGOUT) {
+            if (clientStatePacket.getClientState() == LOGOUT || clientStatePacket.getClientState() == ALIVE) {
+                output.send(clientStatePacket);
                 AsteroidsServer.logger.log(INFO, "[OperatorOutputHandler] Sending {0}", clientStatePacket);
             }
-            output.send(clientStatePacket);
         }
         AsteroidsServer.logger.log(FINE, "[OperatorOutputHandler] End of observed update");
     }

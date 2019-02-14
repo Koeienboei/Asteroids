@@ -63,7 +63,9 @@ public class Game extends Observable implements Runnable {
                 calculationTime = System.currentTimeMillis() - time;
                 setChanged();
                 notifyObservers();
-                Thread.sleep(max(0, 40 - calculationTime));
+                if (40-calculationTime > 0) {
+                    Thread.sleep(40 - calculationTime);
+                }
             } catch (InterruptedException ex) {
                 AsteroidsServer.logger.log(SEVERE, "Failed to wait after next step in Game");
             }
@@ -165,7 +167,6 @@ public class Game extends Observable implements Runnable {
         clientHandler.setSpaceship(spaceship);
         model.addGameObject(spaceship);
         spaceship.spawn();
-        spaceship.setAlive();
     }
 
     public void stopRunning() {

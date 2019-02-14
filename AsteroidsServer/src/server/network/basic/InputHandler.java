@@ -20,36 +20,17 @@ import server.network.packets.Packet;
  */
 public class InputHandler {
 
-    private Logger logger = Logger.getGlobal();
-    
     private ObjectInputStream input;
 
-    public InputHandler(Socket socket) {
-        logger.log(Level.FINE, "[InputHandler] Create");
-        try {
-            input = new ObjectInputStream(socket.getInputStream());
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, "[InputHandler] Failed to create ObjectInputStream {0}", ex.getMessage());
-        }
+    public InputHandler(Socket socket) throws IOException {
+        input = new ObjectInputStream(socket.getInputStream());
     }
 
-    public Packet receive() {
-        logger.log(Level.FINE, "[InputHandler] Receive packet");
-        try {
-            Object o = input.readObject();
-            if (o instanceof Packet) {
-                Packet packet = (Packet) o;
-                logger.log(Level.FINE, "[InputHandler] Received packet: {0}", packet);
-                return (Packet) o;
-            }
-        } catch (SocketTimeoutException ex) {
-            logger.log(FINE, "[InputHandler] Socket timeout");
-        } catch (IOException | ClassNotFoundException ex) {
-            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet {0}", ex.getMessage());
-        } catch (ClassCastException ex) {
-            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet {0} {1}", new Object[] {ex.getMessage(), ex.toString()});
-        } catch (Exception ex) {
-            logger.log(Level.WARNING, "[InputHandler] Failed to receive packet {0}", ex.getMessage());
+    public Packet receive() throws IOException, ClassNotFoundException, ClassCastException {
+        Object o = input.readObject();
+        if (o instanceof Packet) {
+            Packet packet = (Packet) o;
+            return (Packet) o;
         }
         return null;
     }

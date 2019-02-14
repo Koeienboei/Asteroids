@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.Observable;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import model.GameObject;
 import model.updates.SpaceshipUpdate;
@@ -71,14 +72,18 @@ public class ClientOutputHandler extends Observable implements Runnable {
         while (running) {
             time = System.currentTimeMillis();
             UpdatePacket updatePacket = clientHandler.getUpdateQueue().pop();
+            AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Sending pop {0} to client {1} (queue size: {2})", new Object[] {updatePacket, clientHandler, clientHandler.getUpdateQueue().size()});
             if (updatePacket != null) {
                 output.send(updatePacket);
             }
+            
+            calculationTime = System.currentTimeMillis() - time;
+            setChanged();
+            notifyObservers();
             try {
-                calculationTime = System.currentTimeMillis() - time;
-                setChanged();
-                notifyObservers();
-                this.wait(max(0, 40 - calculationTime));
+                if (40 - calculationTime > 0) {
+                    Thread.sleep(40 - calculationTime);
+                }
             } catch (InterruptedException ex) {
                 AsteroidsServer.logger.log(SEVERE, "[ClientOutputHandler] Failed to wait after sending UpdatePacket");
             }
@@ -94,11 +99,11 @@ public class ClientOutputHandler extends Observable implements Runnable {
         AsteroidsServer.logger.log(FINE, "[ClientOutputHandler] Start");
         running = true;
         update();
-        AsteroidsServer.logger.log(FINE, "[ClientOutputHandler] End of run function");
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] End of run function {0}", clientHandler);
     }
     
     public void stopRunning() {
-        AsteroidsServer.logger.log(FINE, "[ClientOutputHandler] Stop running");
+        AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Stop running {0}", clientHandler);
         running = false;
     }
 

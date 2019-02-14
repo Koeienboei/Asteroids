@@ -62,13 +62,23 @@ public class AsteroidsServer {
         ;
         });
         
-        int height = Integer.parseInt(args[0]);
-        int width = Integer.parseInt(args[1]);
+        int height, width, amountAsteroids;
+        Address operatorAddress;
+        try {
+            height = Integer.parseInt(args[0]);
+            width = Integer.parseInt(args[1]);
+            amountAsteroids = Integer.parseInt(args[2]);
 
-        String operatorIp = args[2];
-        int operatorPort = Integer.parseInt(args[3]);
+            operatorAddress = new Address(args[3], Integer.parseInt(args[4]));
+        } catch (Exception ex) {
+            height = 3200;
+            width = 3200;
+            amountAsteroids = 32;
+            
+            operatorAddress = new Address("127.0.1.1", 8851);
+        }
 
-        Server server = new Server(height, width, new Address(operatorIp, operatorPort));
+        Server server = new Server(height, width, amountAsteroids, operatorAddress);
 
         server.start();
     }

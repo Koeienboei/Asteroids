@@ -36,14 +36,14 @@ public class Server extends Observable implements Observer {
     
     private boolean markedShutdown;
 
-    public Server(int height, int width, Address operatorAddress) {
+    public Server(int height, int width, int amountAsteroids, Address operatorAddress) {
         AsteroidsServer.logger.log(FINE, "[Server] Create");
-        initialize(height, width, operatorAddress);
+        initialize(height, width, amountAsteroids, operatorAddress);
     }
 
-    private void initialize(int height, int width, Address operatorAddress) {
+    private void initialize(int height, int width, int amountAsteroids, Address operatorAddress) {
         AsteroidsServer.logger.log(FINE, "[Server] Initialize");
-        game = new Game(this, height, width, 32);
+        game = new Game(this, height, width, amountAsteroids);
 
         clients = new ConcurrentLinkedQueue<>();
         clientConnector = new ClientConnector(this);

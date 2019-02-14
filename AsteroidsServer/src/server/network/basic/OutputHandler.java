@@ -42,7 +42,7 @@ public class OutputHandler {
                 output.reset();
                 sent = true;
             } catch (IOException ex) {
-                logger.log(Level.WARNING, "[OutputHandler] Failed({0}) to send packet: {1}", new Object[]{timesTried, packet});
+                logger.log(Level.WARNING, "[OutputHandler] Failed({0}) to send packet: {1} {2}", new Object[]{timesTried, packet, ex.getMessage()});
             }
         }
     }

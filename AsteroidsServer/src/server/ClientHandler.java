@@ -17,6 +17,7 @@ import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import model.Spaceship;
+import static server.ClientState.ALIVE;
 import static server.ClientState.INITIALIZE;
 import static server.ClientState.LOGIN;
 import static server.ClientState.LOGOUT;
@@ -80,6 +81,7 @@ public class ClientHandler extends Observable implements Runnable {
         addToMonitor();
         startSendingUpdates();
         startReceivingPackets();
+        clientState = ALIVE;
     }
     
     public void logout() {

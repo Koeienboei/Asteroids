@@ -221,9 +221,12 @@ public class AsteroidsModel {
     }
 
     public void processControllerUpdate(ControllerUpdate update) {
-        SpaceshipController spaceshipController = getSpaceship(update.getObjectId()).getSpaceshipController();
-        if (spaceshipController != null) {
-            spaceshipController.update(update);
+        Spaceship spaceship = getSpaceship(update.getObjectId());
+        if (spaceship != null) {
+            SpaceshipController spaceshipController = spaceship.getSpaceshipController();
+            if (spaceshipController != null) {
+                spaceshipController.update(update);
+            }
         }
     }
 

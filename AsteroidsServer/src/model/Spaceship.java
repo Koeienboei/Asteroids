@@ -42,7 +42,7 @@ public class Spaceship extends GameObject {
         this.stepsTillAlive = 0;
         this.maxSpeed = 50;
         this.delete = false;
-        this.alive = false;
+        this.alive = true;
     }
 
     public Spaceship(SpaceshipUpdate spaceshipUpdate, AsteroidsModel model) {
@@ -135,7 +135,7 @@ public class Spaceship extends GameObject {
         if (alive == true && sc.fireBullets() && stepsTillFire == 0) {
             Bullet b = new Bullet(this.x, this.y, this.dx, this.dy, this.direction, model);
             model.addGameObject(b);
-            stepsTillFire = 75;
+            stepsTillFire = 25;
         }
     }
 
@@ -178,7 +178,7 @@ public class Spaceship extends GameObject {
         AsteroidsServer.logger.log(FINE, "Kill Spaceship");
         clientHandler.setState(DEAD);
         alive = false;
-        stepsTillAlive = 125;
+        stepsTillAlive = 75;
     }
 
     public boolean isAlive() {

@@ -61,7 +61,7 @@ public class MonitorPacket extends Packet implements Serializable {
     
     @Override
     public String toString() {
-        return "MonitorPacket(" + responseTime + ", " + utilization + ", " + throughput + ")";
+        return "MonitorPacket(" + Math.round(responseTime) + ", " + Math.round(utilization) + ", " + Math.round(throughput) + ")";
     }
    
 }
