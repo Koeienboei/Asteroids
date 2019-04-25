@@ -6,6 +6,7 @@
 package operator;
 
 import asteroidsoperator.AsteroidsOperator;
+import java.io.IOException;
 import server.network.basic.Address;
 import java.util.Collection;
 import java.util.Iterator;
@@ -31,6 +32,8 @@ import static server.ClientState.LOGOUT;
  */
 public class Operator extends Observable implements Observer {
 
+    private DockerHandler dockerHandler;
+    
     private ClientConnector clientConnector;
     private ServerConnector serverConnector;
     private ConcurrentLinkedQueue<ClientHandler> clients;
@@ -44,9 +47,13 @@ public class Operator extends Observable implements Observer {
     private Planner planner;
 
     private boolean markedShutdown;
+    
+    private double lastClientSwap;
 
     public Operator(int rLow, int rHigh, int rMax, int W, int reconfigurationSpeed) {
         AsteroidsOperator.logger.log(FINE, "[Operator] Create");
+        dockerHandler = new DockerHandler();
+        
         clientConnector = new ClientConnector(this);
         serverConnector = new ServerConnector(this);
 
@@ -58,16 +65,20 @@ public class Operator extends Observable implements Observer {
         serverPortCounter = 8900;
 
         monitor = new Monitor(this, rLow, rHigh, rMax, W, reconfigurationSpeed);
-        planner = new Planner(this);
+        planner = new Planner(this, rLow, rHigh, rMax);
 
         markedShutdown = false;
+        
+        lastClientSwap = System.currentTimeMillis();
     }
 
     public synchronized void start() {
         AsteroidsOperator.logger.log(FINE, "[Operator] Start");
         monitor.start();
         serverConnector.start();
-        startServers(3);
+        ServerStarter serverStarter = new ServerStarter();
+        startServers(1);
+        //serverStarter.start();
         clientConnector.start();
     }
 
@@ -138,7 +149,7 @@ public class Operator extends Observable implements Observer {
         for (int i=0; i<amount; i++) {
             startServer();
             try {
-                wait(500);
+                Thread.sleep(500);
             } catch (InterruptedException ex) {
                 AsteroidsOperator.logger.log(SEVERE, "[Operator] Failed to wait after spawning new server");
             }
@@ -147,10 +158,20 @@ public class Operator extends Observable implements Observer {
     
     public void startServer() {
         AsteroidsOperator.logger.log(FINE, "[Operator] Start Server");
-        ServerStarter serverStarter = new ServerStarter();
-        serverStarter.start();
+        dockerHandler.startServer();
     }
 
+    public void removeServers(int amount) {
+        for (int i=0; i<amount; i++) {
+            removeServer();
+            /*try {
+                Thread.sleep(500);
+            } catch (InterruptedException ex) {
+                AsteroidsOperator.logger.log(SEVERE, "[Operator] Failed to wait after spawning new server");
+            }*/
+        }
+    }
+    
     public void removeServer() {
         AsteroidsOperator.logger.log(FINE, "[Operator] Remove Server");
         ServerHandler lowestUtilityServer;
@@ -162,7 +183,7 @@ public class Operator extends Observable implements Observer {
         }
         while (it.hasNext()) {
             ServerHandler serverData = it.next();
-            if (serverData.isRunning() && serverData.getUtility() < lowestUtilityServer.getUtility()) {
+            if (serverData.isRunning() && !serverData.isMarkedShutdown() && serverData.getUtility() < lowestUtilityServer.getUtility()) {
                 lowestUtilityServer = serverData;
             }
         }
@@ -174,6 +195,7 @@ public class Operator extends Observable implements Observer {
     public void shutdown() {
         AsteroidsOperator.logger.log(FINE, "[Operator] Shutdown");
         markedShutdown = true;
+        monitor.stopRunning();
         clientConnector.stopRunning();
         clientConnector.disconnect();
         serverConnector.stopRunning();
@@ -227,6 +249,18 @@ public class Operator extends Observable implements Observer {
 
     public Planner getPlanner() {
         return planner;
+    }
+
+    public double getLastClientSwap() {
+        return System.currentTimeMillis() - lastClientSwap;
+    }
+
+    public void setLastClientSwap() {
+        this.lastClientSwap = System.currentTimeMillis();
+    }
+
+    public DockerHandler getDockerHandler() {
+        return dockerHandler;
     }
 
     @Override

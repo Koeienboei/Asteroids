@@ -9,10 +9,8 @@ import asteroidsoperator.AsteroidsOperator;
 import operator.Operator;
 import operator.ServerHandler;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
 import server.network.basic.OutputHandler;
 import server.network.packets.MarkShutdownPacket;
-import server.network.packets.ServerPacket;
 import server.network.packets.ShutdownPacket;
 
 /**

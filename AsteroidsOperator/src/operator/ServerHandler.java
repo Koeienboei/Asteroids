@@ -15,8 +15,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Iterator;
 import server.network.basic.Address;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -26,7 +24,6 @@ import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 import server.network.packets.MonitorPacket;
 import server.network.packets.ServerPacket;
-import server.network.packets.ShutdownPacket;
 
 /**
  *
@@ -37,6 +34,7 @@ public class ServerHandler extends Observable implements Runnable {
     private Operator operator;
 
     private Address addressForClient;
+    private String containerId;
 
     private Socket socket;
     private ServerInputHandler input;
@@ -46,30 +44,34 @@ public class ServerHandler extends Observable implements Runnable {
 
     private int height;
     private int width;
-    
+
     private boolean markedShutdown;
-    
+
     private MonitorPacketList monitorPacketList;
     private BufferedWriter monitorFileWriter;
+
+    private StatsCallbackLog statsCallbackLog;
 
     public ServerHandler(Socket socket, Operator operator) {
         AsteroidsOperator.logger.log(INFO, "[ServerHandler] Create");
         this.operator = operator;
         this.socket = socket;
+        this.containerId = operator.getDockerHandler().getLatestContainerId();
+
         initialize();
     }
 
     private void initialize() {
         output = new ServerOutputHandler(this, operator);
         input = new ServerInputHandler(this, operator);
-        
+
         try {
             socket.setTcpNoDelay(true);
             //socket.setSoTimeout(40);
         } catch (SocketException ex) {
             AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to set socket settings");
         }
-        
+
         clients = new ConcurrentLinkedQueue<>();
         monitorPacketList = new MonitorPacketList(operator.getMonitor().getW());
         try {
@@ -77,10 +79,18 @@ public class ServerHandler extends Observable implements Runnable {
         } catch (IOException ex) {
             AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to create file writer");
         }
-        
+
+        try {
+            this.statsCallbackLog = operator.getDockerHandler().getContainerCpuUsage(containerId);
+        } catch (InterruptedException ex) {
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed get container cpu usage");
+        }
+
         markedShutdown = false;
+
+        //output.sendContainerPacket(containerId);
     }
-    
+
     public void initialize(ServerPacket serverPacket) {
         AsteroidsOperator.logger.log(INFO, "[ServerHandler] Initialize with {0}", serverPacket);
         addressForClient = serverPacket.getServerAddress();
@@ -89,18 +99,18 @@ public class ServerHandler extends Observable implements Runnable {
         setChanged();
         notifyObservers();
     }
-    
+
     @Override
     public void run() {
         login();
     }
-    
+
     public void login() {
         addToOperator();
         addToPanel();
         startReceivingPackets();
     }
-    
+
     public void shutdown() {
         AsteroidsOperator.logger.log(INFO, "[ServerHandler] Shutdown {0}", addressForClient);
         sendShutdownPacket();
@@ -114,46 +124,46 @@ public class ServerHandler extends Observable implements Runnable {
         stopReceivingPackets();
         disconnect();
         removeFromPanel();
-        removeFromOperator();   
+        removeFromOperator();
         try {
             monitorFileWriter.close();
         } catch (IOException ex) {
             AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to close monitor file");
         }
     }
-    
+
     private void sendMarkShutdownPacket() {
         output.sendMarkShutdownPacket();
     }
-    
+
     private void sendShutdownPacket() {
         output.sendShutdownPacket();
     }
-    
+
     private void startReceivingPackets() {
         input.start();
     }
-    
+
     private void stopReceivingPackets() {
         input.stopRunning();
     }
-    
+
     private void addToPanel() {
         addObserver(operator);
     }
-    
+
     private void removeFromPanel() {
         deleteObservers();
     }
-    
+
     private void addToOperator() {
         operator.addServer(this);
     }
-    
+
     private void removeFromOperator() {
         operator.removeServer(this);
     }
-    
+
     public void disconnect() {
         AsteroidsOperator.logger.log(INFO, "[ServerHandler] Disconnect {0}", addressForClient);
         try {
@@ -165,18 +175,38 @@ public class ServerHandler extends Observable implements Runnable {
 
     public void addMonitorPacket(MonitorPacket monitorPacket) {
         AsteroidsOperator.logger.log(FINE, "[ServerHandler] Adding {0}", monitorPacket);
+        monitorPacket.setUtilization(statsCallbackLog.getCpuPercent());
         try {
             monitorFileWriter.write(monitorPacket.toString() + "\n");
+            monitorPacketList.add(monitorPacket);
+            setChanged();
+            notifyObservers();
         } catch (IOException ex) {
             AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to write to monitor file");
         }
-        monitorPacketList.add(monitorPacket);
+
     }
-    
+
+    public void startGetCpuPercent() {
+        try {
+            this.statsCallbackLog = operator.getDockerHandler().getContainerCpuUsage(containerId);
+        } catch (InterruptedException ex) {
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to start get container cpu usage");
+        }
+    }
+
+    public void stopGetCpuPercent() {
+        try {
+            this.statsCallbackLog.close();
+        } catch (IOException ex) {
+            AsteroidsOperator.logger.log(SEVERE, "[ServerHandler] Failed to close get container cpu usage");
+        }
+    }
+
     public Socket getSocket() {
         return socket;
     }
-    
+
     public ServerInputHandler getInput() {
         return input;
     }
@@ -192,20 +222,20 @@ public class ServerHandler extends Observable implements Runnable {
     public Address getAddressForOperator() {
         return new Address(socket.getInetAddress().getHostAddress(), socket.getPort());
     }
-    
+
     public int getUtility() {
         return clients.size();
     }
 
     public void addClient(ClientHandler clientData) {
-        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Server {0} added Client: {1}", new Object[] {addressForClient, clientData.getAddressConnectionServer()});
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Server {0} added Client: {1}", new Object[]{addressForClient, clientData.getAddressConnectionServer()});
         clients.add(clientData);
         setChanged();
         notifyObservers();
     }
 
     public void removeClient(ClientHandler clientData) {
-        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Server {0} removed Client: {1}", new Object[] {addressForClient, clientData.getAddressConnectionServer()});
+        AsteroidsOperator.logger.log(INFO, "[ServerHandler] Server {0} removed Client: {1}", new Object[]{addressForClient, clientData.getAddressConnectionServer()});
         clients.remove(clientData);
         setChanged();
         notifyObservers();
@@ -219,16 +249,24 @@ public class ServerHandler extends Observable implements Runnable {
             shutdown();
         }
         markedShutdown = true;
+        Iterator<ClientHandler> it = clients.iterator();
+        while (it.hasNext()) {
+            it.next().swap();
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException ex) {
+            }
+        }
     }
-    
+
     public boolean isMarkedShutdown() {
         return markedShutdown;
     }
-    
+
     public boolean isAboveAverage() {
         return getUtility() > operator.getAverageUtilization();
     }
-    
+
     public boolean isRunning() {
         if (input == null || addressForClient == null) {
             return false;
@@ -246,10 +284,14 @@ public class ServerHandler extends Observable implements Runnable {
 
     public MonitorPacketList getMonitorPacketList() {
         return monitorPacketList;
-    }    
+    }
+
+    public StatsCallbackLog getStatsCallbackLog() {
+        return statsCallbackLog;
+    }
 
     @Override
     public String toString() {
-        return addressForClient + "  [" + clients.size() + "]" + (markedShutdown ? "Shutting down ..." : "");
+        return containerId.substring(0, 14) + "\t" + addressForClient + "\t[" + clients.size() + "]\t" + monitorPacketList.getAverage() + (markedShutdown ? "\tShutting down ..." : "");
     }
 }

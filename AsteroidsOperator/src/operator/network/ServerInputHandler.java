@@ -71,18 +71,10 @@ public class ServerInputHandler extends Thread {
                     if (clientStatePacket.getClientState() == LOGOUT) {
                         AsteroidsOperator.logger.log(FINE, "[ServerInputHandler] Received {0}", clientStatePacket);
                         serverHandler.removeClient(clientHandler);
-                    } else if (serverHandler.isMarkedShutdown() && clientStatePacket.getClientState() == ALIVE) {
-                        ServerHandler newServerHandler = operator.getServer();
-                        clientHandler.setServerHandler(newServerHandler);
-                        clientHandler.getServerHandler().addClient(clientHandler);
-                        clientHandler.getOutput().sendServerPacket();
-                    } else if (serverHandler.isAboveAverage() && clientStatePacket.getClientState() == ALIVE) {
-                        ServerHandler newServerHandler = operator.getServer();
-                        if (newServerHandler != serverHandler) {
-                            clientHandler.setServerHandler(newServerHandler);
-                            clientHandler.getServerHandler().addClient(clientHandler);
-                            clientHandler.getOutput().sendServerPacket();
-                        }
+                    }/* else if (serverHandler.isMarkedShutdown() && clientStatePacket.getClientState() == ALIVE) {
+                        clientHandler.swap();
+                    }*/ else if (serverHandler.isAboveAverage() && clientStatePacket.getClientState() == ALIVE) {
+                        clientHandler.swap();
                     }
                 }
             } else if (packet instanceof ShutdownPacket) {

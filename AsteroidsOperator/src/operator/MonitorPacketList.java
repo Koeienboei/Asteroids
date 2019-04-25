@@ -7,6 +7,7 @@ package operator;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import server.network.packets.MonitorPacket;
 
 /**
@@ -15,13 +16,15 @@ import server.network.packets.MonitorPacket;
  */
 public class MonitorPacketList {
     
-    private LinkedList<MonitorPacket> list;
+    private ConcurrentLinkedQueue<MonitorPacket> list;
+    private int W;
     
     public MonitorPacketList(int W) {
-        list = new LinkedList<>();
+        list = new ConcurrentLinkedQueue<>();
         for (int i=0; i<W; i++) {
             list.add(new MonitorPacket(0,0,0));
         }
+        this.W = W;
     }
     
     public void add(MonitorPacket monitorPacket) {
@@ -35,7 +38,7 @@ public class MonitorPacketList {
         while (it.hasNext()) {
             total += it.next().getResponseTime();
         }
-        return total / list.size();
+        return total / W;
     }
     
     public double getAverageThroughput() {
@@ -44,7 +47,7 @@ public class MonitorPacketList {
         while (it.hasNext()) {
             total += it.next().getThroughput();
         }
-        return total / list.size();
+        return total / W;
     }
     
     public double getAverageUtilization() {
@@ -53,7 +56,11 @@ public class MonitorPacketList {
         while (it.hasNext()) {
             total += it.next().getUtilization();
         }
-        return total / list.size();
+        return total / W;
+    }
+    
+    public MonitorPacket getCurrent() {
+        return list.peek();
     }
     
     public MonitorPacket getAverage() {
@@ -61,9 +68,9 @@ public class MonitorPacketList {
         Iterator<MonitorPacket> it = list.iterator();
         while (it.hasNext()) {
             MonitorPacket next = it.next();
-            average.setResponseTime(average.getResponseTime() + next.getResponseTime()/list.size());
-            average.setThroughput(average.getThroughput() + next.getThroughput()/list.size());
-            average.setUtilization(average.getUtilization() + next.getUtilization()/list.size());
+            average.setResponseTime(average.getResponseTime() + next.getResponseTime()/W);
+            average.setThroughput(average.getThroughput() + next.getThroughput()/W);
+            average.setUtilization(average.getUtilization() + next.getUtilization()/W);
         }
         return average;
     }

@@ -5,7 +5,10 @@
  */
 package asteroidsoperator;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import static java.util.logging.Level.ALL;
@@ -28,14 +31,21 @@ public class AsteroidsOperator {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        try { 
+        /*try { 
             fh = new FileHandler("OperatorLogs.log");
             logger.addHandler(fh);
             SimpleFormatter formatter = new SimpleFormatter();
             fh.setFormatter(formatter);
         } catch (SecurityException | IOException e) {
+        }*/
+        logger.setLevel(Level.OFF);
+        
+        try {
+            PrintStream error = new PrintStream(new FileOutputStream("error.txt"));
+            System.setErr(error);
+        } catch (FileNotFoundException ex) {
+            
         }
-        logger.setLevel(Level.INFO);
         
         int rLow, rHigh, rMax, W, reconfigurationSpeed;
         try {
@@ -45,13 +55,14 @@ public class AsteroidsOperator {
             W = Integer.parseInt(args[3]);
             reconfigurationSpeed = Integer.parseInt(args[4]);
         } catch (Exception ex) {
+            System.out.println("Error on input arguments (" + ex.getMessage() + ")");
             rLow = 1;
             rHigh = 5;
             rMax = 10;
             W = 3;
             reconfigurationSpeed = 10;
         }
-        
+        System.out.println("Starting operator with rLow=" + rLow + " rHigh=" + rHigh + " rMax=" + rMax + " W=" + W + " speed=" + reconfigurationSpeed);
         Operator operator = new Operator(rLow, rHigh, rMax, W, reconfigurationSpeed);
         MainFrame mainFrame = new MainFrame(operator);
         operator.start();

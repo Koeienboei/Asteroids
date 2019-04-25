@@ -76,6 +76,20 @@ public class ClientHandler implements Runnable {
         disconnect();
         removeFromOperator();
     }
+    
+    public void swap() {
+        /*if (operator.getLastClientSwap() < 1000) {
+            return;
+        }*/
+        ServerHandler newServerHandler = operator.getServer();
+        if (newServerHandler == serverHandler) {
+            return;
+        }
+        this.setServerHandler(newServerHandler);
+        this.getServerHandler().addClient(this);
+        this.getOutput().sendServerPacket();
+        operator.setLastClientSwap();
+    }
 
     private void addToOperator() {
         operator.addClient(this);

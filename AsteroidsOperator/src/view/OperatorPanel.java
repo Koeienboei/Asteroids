@@ -6,6 +6,7 @@
 package view;
 
 import asteroidsoperator.AsteroidsOperator;
+import java.awt.Font;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Observable;
@@ -38,6 +39,9 @@ public class OperatorPanel extends JPanel implements Observer {
         addressForClients = new JLabel("Address for clients:  " + operator.getClientConnector().getAddress());
         addressForServers = new JLabel("Address for servers: " + operator.getServerConnector().getAddress());
         serverData = new JTextArea("");
+        addressForClients.setFont(new Font("Courier New", Font.PLAIN, 12));
+        addressForServers.setFont(new Font("Courier New", Font.PLAIN, 12));
+        serverData.setFont(new Font("Courier New", Font.PLAIN, 12));
         
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         this.add(addressForClients);
@@ -50,11 +54,13 @@ public class OperatorPanel extends JPanel implements Observer {
     @Override
     public void update(Observable o, Object arg) {
         AsteroidsOperator.logger.log(FINE, "[OperatorPanel] Observed Update");
-        serverData.setText("");
+        String text = "";
         Iterator<ServerHandler> it = operator.getServers().iterator();
         while (it.hasNext()) {
-            serverData.append(it.next().toString() + "\n");
+            text += it.next().toString() + "\n";
+            
         }
+        serverData.setText(text);
     }
     
 }
