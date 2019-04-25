@@ -12,6 +12,8 @@ import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -23,6 +25,7 @@ import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import server.network.basic.Address;
 import view.StartPanel;
 
 /**
@@ -31,22 +34,24 @@ import view.StartPanel;
  * @author Wilco Wijbrandi
  */
 @SuppressWarnings("serial")
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements Runnable {
 
     private LinkedList<Client> clients;
     private MainFrame mainFrame;
+
+    private LinkedList<Integer> amountClientsOverTime;
 
     private AbstractAction joinAction;
 
     private JPanel mainPanel;
     private StartPanel startPanel;
 
-    public MainFrame() {
+    public MainFrame(LinkedList<Integer> amountClientsOverTime) {
         clients = new LinkedList<>();
         mainFrame = this;
-
+        this.amountClientsOverTime = amountClientsOverTime;
         initActions();
-        initGUI();
+        //initGUI();
     }
 
     private void initGUI() {
@@ -65,6 +70,33 @@ public class MainFrame extends JFrame {
         this.addWindowListener(new Exit());
     }
 
+    @Override
+    public void run() {
+        Iterator<Integer> it = amountClientsOverTime.iterator();
+        int next;
+        int current = 0;
+        int difference;
+        while (it.hasNext()) {
+            next = it.next();
+            difference = Math.abs(next - current);
+            if (next < current) {
+                System.out.println("Closing " + difference + " clients");
+                closeClients(difference);
+            } else {
+                System.out.println("Spawning " + difference + " clients");
+                spawnClients(difference);
+            }
+            current = next;
+            if (10000 - difference * 250 > 0) {
+                try {
+                    Thread.sleep(10000 - difference * 250);
+                } catch (InterruptedException ex) {
+                }
+            }
+        }
+        closeClients();
+    }
+
     private void spawnClients(int amount) {
         for (int i = 0; i < amount; i++) {
             spawnClient();
@@ -72,11 +104,16 @@ public class MainFrame extends JFrame {
     }
 
     private void spawnClient() {
-        Client client = new ClientBot(startPanel.getOperatorAddress());
-        clients.add(client);
-        client.start();
+        Client client;
         try {
-            Thread.sleep(1000);
+            client = new ClientBot(/*startPanel.getOperatorAddress()*/new Address(InetAddress.getLocalHost().getHostAddress(), 8850));
+            clients.add(client);
+            client.start();
+        } catch (UnknownHostException ex) {
+        }
+
+        try {
+            Thread.sleep(250);
         } catch (InterruptedException ex) {
         }
     }
@@ -87,10 +124,23 @@ public class MainFrame extends JFrame {
             Client client = it.next();
             client.logger.log(INFO, "[MainFrame] Window closing");
             client.close();
-            /*try {
-                Thread.sleep(200);
+        }
+    }
+
+    private void closeClients(int amount) {
+        for (int i = 0; i < amount; i++) {
+            closeClient();
+        }
+    }
+
+    private void closeClient() {
+        if (!clients.isEmpty()) {
+            clients.getFirst().close();
+            clients.remove();
+            try {
+                Thread.sleep(250);
             } catch (InterruptedException ex) {
-            }*/
+            }
         }
     }
 
