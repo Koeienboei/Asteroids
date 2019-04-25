@@ -2,17 +2,14 @@ package server;
 
 import server.network.ClientConnector;
 import asteroidsserver.AsteroidsServer;
-import static asteroidsserver.AsteroidsServer.logger;
-import controller.MainFrame;
 import server.network.basic.Address;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static server.ClientState.ALIVE;
 import static server.ClientState.DEAD;
@@ -24,7 +21,7 @@ import server.network.OperatorConnector;
  * @author Tom
  */
 public class Server extends Observable implements Observer {
-
+    
     private ClientConnector clientConnector;
     private ConcurrentLinkedQueue<ClientHandler> clients;
 
@@ -37,12 +34,12 @@ public class Server extends Observable implements Observer {
     private boolean markedShutdown;
 
     public Server(int height, int width, int amountAsteroids, Address operatorAddress) {
-        AsteroidsServer.logger.log(FINE, "[Server] Create");
+        AsteroidsServer.logger.log(INFO, "[Server] Create");
         initialize(height, width, amountAsteroids, operatorAddress);
     }
 
     private void initialize(int height, int width, int amountAsteroids, Address operatorAddress) {
-        AsteroidsServer.logger.log(FINE, "[Server] Initialize");
+        AsteroidsServer.logger.log(INFO, "[Server] Initialize");
         game = new Game(this, height, width, amountAsteroids);
 
         clients = new ConcurrentLinkedQueue<>();
@@ -50,14 +47,14 @@ public class Server extends Observable implements Observer {
 
         operatorConnector = new OperatorConnector(operatorAddress, this);
         
-        monitor = new Monitor(operatorConnector, game);
+        monitor = new Monitor(this);
         game.addObserver(monitor);
 
         markedShutdown = false;
     }
 
     public void start() {
-        AsteroidsServer.logger.log(FINE, "[Server] Start");
+        AsteroidsServer.logger.log(INFO, "[Server] Start");
         connectToOperator();
         startGame();
         startClientConnector();
@@ -93,7 +90,7 @@ public class Server extends Observable implements Observer {
     }
 
     private void connectToOperator() {
-        AsteroidsServer.logger.log(FINE, "[Server] Login to operator");
+        AsteroidsServer.logger.log(INFO, "[Server] Login to operator");
         operatorConnector.start();
     }
 

@@ -74,7 +74,7 @@ public class ClientHandler extends Observable implements Runnable {
         AsteroidsServer.logger.log(INFO, "[ClientHandler] Login {0}", getAddress());
         System.out.println("Client logs in: " + getAddress());
         addToServer();
-        sendInitPacket();
+        //sendInitPacket();
         addToGame();
         sendSpaceship();
         initializeUpdateQueue();
@@ -87,9 +87,9 @@ public class ClientHandler extends Observable implements Runnable {
     public void logout() {
         AsteroidsServer.logger.log(INFO, "[ClientHandler] Logout {0}", getAddress());
         System.out.println("Client logs out: " + getAddress());
+        stopSendingUpdates();
         setState(LOGOUT);
         sendLogoutPacket();
-        stopSendingUpdates();
         stopReceivingPackets();
         disconnect();
         removeFromMonitor();

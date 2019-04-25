@@ -7,11 +7,8 @@ package server.network;
 
 import asteroidsserver.AsteroidsServer;
 import java.io.IOException;
-import java.util.logging.Level;
-import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
 import server.Server;
 import server.network.basic.InputHandler;
 import server.network.packets.MarkShutdownPacket;

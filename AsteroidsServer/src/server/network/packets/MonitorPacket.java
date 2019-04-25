@@ -25,7 +25,7 @@ public class MonitorPacket extends Packet implements Serializable {
     public MonitorPacket(Monitor monitor) {
         AsteroidsServer.logger.log(FINE, "Create MonitorPacket");
         this.responseTime = monitor.getResponseTime();
-        this.utilization = monitor.getUtilization();
+        this.utilization = /*monitor.getUtilization()*/ 0.0;
         this.throughput = monitor.getThroughput();
     }
     
@@ -61,7 +61,7 @@ public class MonitorPacket extends Packet implements Serializable {
     
     @Override
     public String toString() {
-        return "MonitorPacket(" + Math.round(responseTime) + ", " + Math.round(utilization) + ", " + Math.round(throughput) + ")";
+        return "MonitorPacket(" + Math.round(responseTime) + ", " + Math.round(utilization*100) + ", " + Math.round(throughput) + ")";
     }
    
 }

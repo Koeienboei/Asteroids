@@ -24,6 +24,8 @@ import server.network.OperatorConnector;
  */
 public class Monitor extends Thread implements Observer {
     
+    private Server server;
+    
     private final OperatorConnector operatorConnector;
     
     private final Game game;
@@ -34,11 +36,13 @@ public class Monitor extends Thread implements Observer {
     
     private volatile boolean running;
     
-    public Monitor(OperatorConnector operatorConnector, Game game) {
+    public Monitor(Server server) {
         AsteroidsServer.logger.log(FINE, "[Monitor] Create");
-        this.operatorConnector = operatorConnector;
+        this.server = server;
         
-        this.game = game;
+        this.operatorConnector = server.getOperatorConnector();
+        
+        this.game = server.getGame();
         this.clients = new ConcurrentLinkedQueue<>();
         
         responseTimeGame = new ConcurrentLinkedQueue<>();
@@ -94,7 +98,7 @@ public class Monitor extends Thread implements Observer {
     
     public double getResponseTime() {
         double responseTimeGame = getResponseTimeGame();
-        double responseTimeClients = getResponseTimeClients();
+        double responseTimeClients = /*getResponseTimeClients()*/ 0.0;
         return responseTimeGame > responseTimeClients ? responseTimeGame : responseTimeClients;
     }
     private double getResponseTimeGame() {
@@ -124,7 +128,8 @@ public class Monitor extends Thread implements Observer {
     }
 
     public double getUtilization() {
-        return ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage();
+        return 0.0;
+        //return server.getDockerHandler().getContainerCpuUsage();
     }
 
     public double getThroughput() {        

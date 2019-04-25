@@ -36,13 +36,13 @@ public class OperatorConnector {
     private OperatorOutputHandler output;
     
     public OperatorConnector(Address operatorAddress, Server server) {
-        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Create");
+        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Create");
         this.server = server;
         this.operatorAddress = operatorAddress;
     }
     
     public void start() {
-        AsteroidsServer.logger.log(FINE, "[OperatorConnector] Login");
+        AsteroidsServer.logger.log(INFO, "[OperatorConnector] Login");
         connect();
         sendServerPacket();
         startSendingPackets();
