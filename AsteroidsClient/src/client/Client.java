@@ -8,6 +8,7 @@ import client.network.ServerConnector;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.OFF;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import model.Spaceship;
@@ -42,14 +43,14 @@ public abstract class Client extends Thread {
     private void initializeLogger() {
         loggerId = System.currentTimeMillis();
         logger = Logger.getLogger("Client[" + loggerId + "]Logs");
-        try {
+        /*try {
             loggerFileHandler = new FileHandler("Client[" + loggerId + "]Logs.log");
             logger.addHandler(loggerFileHandler);
             SimpleFormatter formatter = new SimpleFormatter();
             loggerFileHandler.setFormatter(formatter);
         } catch (SecurityException | IOException e) {
-        }
-        logger.setLevel(INFO);
+        }*/
+        logger.setLevel(OFF);
     }
 
     @Override
