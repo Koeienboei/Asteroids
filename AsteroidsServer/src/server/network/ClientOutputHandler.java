@@ -36,7 +36,7 @@ public class ClientOutputHandler extends Observable implements Runnable {
     private OutputHandler output;
 
     private long calculationTime;
-    
+
     private volatile boolean running;
 
     public ClientOutputHandler(ClientHandler clientHandler, Server server) {
@@ -45,7 +45,7 @@ public class ClientOutputHandler extends Observable implements Runnable {
         this.clientHandler = clientHandler;
 
         output = new OutputHandler(clientHandler.getSocket());
-        
+
         this.calculationTime = 0;
         this.running = false;
     }
@@ -72,11 +72,11 @@ public class ClientOutputHandler extends Observable implements Runnable {
         while (running) {
             time = System.currentTimeMillis();
             UpdatePacket updatePacket = clientHandler.getUpdateQueue().pop();
-            AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Sending pop {0} to client {1} (queue size: {2})", new Object[] {updatePacket, clientHandler, clientHandler.getUpdateQueue().size()});
+            AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Sending pop {0} to client {1} (queue size: {2})", new Object[]{updatePacket, clientHandler, clientHandler.getUpdateQueue().size()});
             if (updatePacket != null) {
                 output.send(updatePacket);
             }
-            
+
             calculationTime = System.currentTimeMillis() - time;
             setChanged();
             notifyObservers();
@@ -90,10 +90,17 @@ public class ClientOutputHandler extends Observable implements Runnable {
         }
     }
 
+    public void sendUpdatePacket() {
+        UpdatePacket updatePacket = clientHandler.getUpdateQueue().pop();
+        if (updatePacket != null) {
+            output.send(updatePacket);
+        }
+    }
+
     public void sendLogoutPacket() {
         output.send(new LogoutPacket());
     }
-    
+
     @Override
     public void run() {
         AsteroidsServer.logger.log(FINE, "[ClientOutputHandler] Start");
@@ -101,7 +108,7 @@ public class ClientOutputHandler extends Observable implements Runnable {
         update();
         AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] End of run function {0}", clientHandler);
     }
-    
+
     public void stopRunning() {
         AsteroidsServer.logger.log(INFO, "[ClientOutputHandler] Stop running {0}", clientHandler);
         running = false;

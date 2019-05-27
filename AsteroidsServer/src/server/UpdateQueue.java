@@ -66,7 +66,7 @@ public class UpdateQueue extends Observable {
                     this.repeat(update);
                 }
                 it.remove();
-                amountProcessed++;
+                //amountProcessed++;
             }
         } catch (Exception ex) {
             AsteroidsServer.logger.log(SEVERE, "Failed to pop UpdateQueue {0}", ex.getMessage());
@@ -77,6 +77,8 @@ public class UpdateQueue extends Observable {
             AsteroidsServer.logger.log(SEVERE, "Failed UpdateQueue currentSlotNumber {0}", currentSlotNumber);
         }
 
+        amountProcessed++;
+        
         if (updates.isEmpty()) {
             return null;
         } else {

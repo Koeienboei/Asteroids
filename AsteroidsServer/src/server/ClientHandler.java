@@ -79,7 +79,7 @@ public class ClientHandler extends Observable implements Runnable {
         sendSpaceship();
         initializeUpdateQueue();
         addToMonitor();
-        startSendingUpdates();
+        //startSendingUpdates();
         startReceivingPackets();
         clientState = ALIVE;
     }

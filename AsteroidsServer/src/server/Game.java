@@ -22,6 +22,7 @@ import model.updates.SpaceshipUpdate;
 import model.updates.Update;
 import static server.ClientState.ALIVE;
 import static server.ClientState.DEAD;
+import static server.ClientState.INITIALIZE;
 
 /**
  *
@@ -79,6 +80,7 @@ public class Game extends Observable implements Runnable {
         this.spawnNewAsteroids();
         this.giveNewObjectsIds();
         this.updateClientQueues();
+        this.updateClients();
         model.addNewObjects();
         model.removeOldObjects();
         model.update();
@@ -167,6 +169,16 @@ public class Game extends Observable implements Runnable {
         clientHandler.setSpaceship(spaceship);
         model.addGameObject(spaceship);
         spaceship.spawn();
+    }
+    
+    public void updateClients() {
+        Iterator<ClientHandler> it = server.getClients().iterator();
+        while (it.hasNext()) {
+            ClientHandler clientHandler = it.next();
+            if (clientHandler.getClientState() != INITIALIZE) {
+                clientHandler.getOutput().sendUpdatePacket();
+            }
+        }
     }
 
     public void stopRunning() {
