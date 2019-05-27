@@ -15,64 +15,70 @@ import server.network.packets.MonitorPacket;
  * @author tomei
  */
 public class MonitorPacketList {
-    
+
     private ConcurrentLinkedQueue<MonitorPacket> list;
-    private int W;
-    
+
     public MonitorPacketList(int W) {
         list = new ConcurrentLinkedQueue<>();
-        for (int i=0; i<W; i++) {
-            list.add(new MonitorPacket(0,0,0));
-        }
-        this.W = W;
     }
-    
+
     public void add(MonitorPacket monitorPacket) {
-        list.remove();
         list.add(monitorPacket);
     }
-    
+
     public double getAverageResponseTime() {
         double total = 0;
+        int size = list.size();
         Iterator<MonitorPacket> it = list.iterator();
         while (it.hasNext()) {
             total += it.next().getResponseTime();
         }
-        return total / W;
+        return total / size;
     }
-    
+
     public double getAverageThroughput() {
         double total = 0;
+        int size = list.size();
         Iterator<MonitorPacket> it = list.iterator();
         while (it.hasNext()) {
             total += it.next().getThroughput();
         }
-        return total / W;
+        return total / size;
     }
-    
+
     public double getAverageUtilization() {
         double total = 0;
+        int size = list.size();
         Iterator<MonitorPacket> it = list.iterator();
         while (it.hasNext()) {
             total += it.next().getUtilization();
         }
-        return total / W;
+        return total / size;
     }
-    
+
     public MonitorPacket getCurrent() {
         return list.peek();
     }
-    
+
+    public double getCurrentResponseTime() {
+        return list.peek().getResponseTime();
+    }
+
+    public void reset() {
+        list.clear();
+    }
+
     public MonitorPacket getAverage() {
-        MonitorPacket average = new MonitorPacket(0,0,0);
+        MonitorPacket average = new MonitorPacket(0, 0, 0);
+        int size = list.size();
         Iterator<MonitorPacket> it = list.iterator();
         while (it.hasNext()) {
             MonitorPacket next = it.next();
-            average.setResponseTime(average.getResponseTime() + next.getResponseTime()/W);
-            average.setThroughput(average.getThroughput() + next.getThroughput()/W);
-            average.setUtilization(average.getUtilization() + next.getUtilization()/W);
+            average.setResponseTime(average.getResponseTime() + next.getResponseTime() / size);
+            average.setThroughput(average.getThroughput() + next.getThroughput() / size);
+            average.setUtilization(average.getUtilization() + next.getUtilization() / size);
         }
         return average;
     }
-    
+
 }

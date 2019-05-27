@@ -8,7 +8,11 @@ package operator;
 import asteroidsoperator.AsteroidsOperator;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.logging.Level;
 import static java.util.logging.Level.FINE;
+import java.util.logging.Logger;
 
 /**
  *
@@ -27,64 +31,120 @@ public class Planner {
         this.Rmax = Rmax;
     }
 
-    public int acquire(int C, double U, double X, double R) {
+    public void acquire(LinkedList<Double> U, double X, double R) {
         AsteroidsOperator.logger.log(FINE, "[Planner] Acquire");
         System.out.println("Acquire");
-        double N;
-        double D;
-        double[] UR;
+        Object[] RXU;
         do {
-            N = X * R;
-            D = C * (U / X);
-            UR = balancedSystemBounds(C, D, N);
-            U = UR[0];
-            R = UR[1];
+
+            R = balancedSystemBounds(R, X, U);
             if (R >= (Rhigh + Rlow) / 2) {
-                C++;
+                operator.startServer();
+
+                RXU = operator.getMonitor().monitor(5);
+
+                R = (double) RXU[0];
+                X = (double) RXU[1];
+                U = (LinkedList<Double>) RXU[2];
             }
         } while (R >= (Rhigh + Rlow) / 2);
-        return C;
     }
 
-    public int release(int C, double U, double X, double R) {
+    public void release(LinkedList<Double> U, double X, double R) {
         AsteroidsOperator.logger.log(FINE, "[Planner] Release");
         System.out.println("Release");
-        double N;
-        double D;
-        double[] UR;
-        while (C > 1) {
-            C--;
-            N = X * R;
-            D = C * (U / X);
-            UR = balancedSystemBounds(C, D, N);
-            U = UR[0];
-            R = UR[1];
+        Object[] RXU;
+        while (operator.getServers().size() > 1) {
+            operator.removeServer();
+
+            RXU = operator.getMonitor().monitor(5);
+
+            R = (double) RXU[0];
+            X = (double) RXU[1];
+            U = (LinkedList<Double>) RXU[2];
+
+            R = balancedSystemBounds(R, X, U);
+
             if (R >= (Rhigh + Rlow) / 2) {
-                C++;
+                operator.startServer();
                 break;
             }
         }
-        return C;
     }
 
-    private double[] balancedSystemBounds(int C, double D, double N) {
-        System.out.println("BSB(" + C + "," + D + "," + N + ")");
-        double Xupper, Xlower, Rupper, Rlower, U, R, X;
-        Xlower = N / (D + (N - 1) * D);
-        Xupper = min(1 / D, N / (D + (N - 1) * D));
-        Rlower = max(N * D, D + (N - 1) * D);
-        Rupper = D + (N - 1) * D;
-        X = (Xupper + Xlower) / 2;
+    private double balancedSystemBounds(double R, double X, LinkedList<Double> U) {
+        double Dmax, Dtot, Dave;
+        double Xupper, Xlower;
+        double Rupper, Rlower;
+        double N;
+        LinkedList<Double> D;
+
+        N = X * R;
+        D = computeD(U, X);
+
+        Dmax = getMax(D);
+        Dtot = getTot(D);
+        Dave = Dtot / D.size();
+
+        //Xlower = N / (Dtot + (N - 1) * Dmax);
+        //Xupper = min(1 / Dmax, N / (Dtot + (N - 1) * Dave));
+        Rlower = max(N * Dmax, Dtot + (N - 1) * Dave);
+        Rupper = Dtot + (N - 1) * Dmax;
+
+        //X = (Xupper + Xlower) / 2;
         R = (Rupper + Rlower) / 2;
-        U = X * D;
-        System.out.println("Xlower = " + Xlower);
-        System.out.println("Xupper = " + Xupper);
-        System.out.println("Rlower = " + Rlower);
-        System.out.println("Rupper = " + Rupper);
-        System.out.println("X = " + X);
-        System.out.println("R = " + R);
-        System.out.println("U = " + U);
-        return new double[]{U, R};
+
+        return R;
+    }
+
+    private LinkedList<Double> computeU(double X, LinkedList<Double> D) {
+        LinkedList<Double> U = new LinkedList<>();
+        Iterator<Double> it = D.iterator();
+        while (it.hasNext()) {
+            U.add(X * it.next());
+        }
+        return U;
+    }
+
+    private LinkedList<Double> computeD(LinkedList<Double> U, double X) {
+        LinkedList<Double> N = new LinkedList<>();
+        Iterator<Double> it = U.iterator();
+        while (it.hasNext()) {
+            N.add(it.next() / X);
+        }
+        return N;
+    }
+
+    private double getMax(LinkedList<Double> list) {
+        double max = 0.0;
+        double current;
+        Iterator<Double> it = list.iterator();
+        while (it.hasNext()) {
+            current = it.next();
+            if (current > max) {
+                max = current;
+            }
+        }
+        return max;
+    }
+
+    private double getTot(LinkedList<Double> list) {
+        double tot = 0.0;
+        Iterator<Double> it = list.iterator();
+        while (it.hasNext()) {
+            tot += it.next();
+        }
+        return tot;
+    }
+
+    private double getAve(LinkedList<Double> list) {
+        double ave = 0.0;
+        int size = list.size();
+        Iterator<Double> it = list.iterator();
+        while (it.hasNext()) {
+            ave += it.next() / size;
+        }
+        return ave;
     }
 
 }
