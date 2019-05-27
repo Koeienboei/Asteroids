@@ -24,6 +24,9 @@ public class AsteroidsClientSimulator {
      */
     public static void main(String[] args) {
         LinkedList<Integer> amountClientsOverTime = new LinkedList<>();
+        
+        int timeSteps = Integer.parseInt(args[0]);
+        
         File text = new File("input.txt");
 
         Scanner scnr;
@@ -35,7 +38,7 @@ public class AsteroidsClientSimulator {
         } catch (FileNotFoundException | NumberFormatException ex) {
         }
 
-        MainFrame mainFrame = new MainFrame(amountClientsOverTime);
+        MainFrame mainFrame = new MainFrame(timeSteps, amountClientsOverTime);
         Thread mainFrameThread = new Thread(mainFrame);
         mainFrameThread.start();
     }

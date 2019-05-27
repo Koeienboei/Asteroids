@@ -39,6 +39,7 @@ public class MainFrame extends JFrame implements Runnable {
     private LinkedList<Client> clients;
     private MainFrame mainFrame;
 
+    private int timeSteps;
     private LinkedList<Integer> amountClientsOverTime;
 
     private AbstractAction joinAction;
@@ -46,9 +47,10 @@ public class MainFrame extends JFrame implements Runnable {
     private JPanel mainPanel;
     private StartPanel startPanel;
 
-    public MainFrame(LinkedList<Integer> amountClientsOverTime) {
+    public MainFrame(int timeSteps, LinkedList<Integer> amountClientsOverTime) {
         clients = new LinkedList<>();
         mainFrame = this;
+        this.timeSteps = timeSteps;
         this.amountClientsOverTime = amountClientsOverTime;
         initActions();
         //initGUI();
@@ -89,7 +91,7 @@ public class MainFrame extends JFrame implements Runnable {
             current = next;
             if (10000 - difference * 250 > 0) {
                 try {
-                    Thread.sleep(10000 - difference * 250);
+                    Thread.sleep((timeSteps * 1000) - (difference * 1000));
                 } catch (InterruptedException ex) {
                 }
             }
@@ -113,7 +115,7 @@ public class MainFrame extends JFrame implements Runnable {
         }
 
         try {
-            Thread.sleep(250);
+            Thread.sleep(1000);
         } catch (InterruptedException ex) {
         }
     }
@@ -138,7 +140,7 @@ public class MainFrame extends JFrame implements Runnable {
             clients.getFirst().close();
             clients.remove();
             try {
-                Thread.sleep(250);
+                Thread.sleep(1000);
             } catch (InterruptedException ex) {
             }
         }
